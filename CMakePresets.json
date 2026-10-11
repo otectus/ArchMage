@@ -1,0 +1,126 @@
+{
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 28,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "gcc",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++"
+      }
+    },
+    {
+      "name": "clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "dev-debug",
+      "displayName": "GCC Debug",
+      "inherits": ["base", "gcc"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "dev-release",
+      "displayName": "GCC RelWithDebInfo",
+      "inherits": ["base", "gcc"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "asan-ubsan",
+      "displayName": "Clang Debug with AddressSanitizer and UndefinedBehaviorSanitizer",
+      "inherits": ["base", "clang"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ARCHMAGE_SANITIZERS": "address;undefined"
+      }
+    },
+    {
+      "name": "tsan",
+      "displayName": "Clang Debug with ThreadSanitizer",
+      "inherits": ["base", "clang"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ARCHMAGE_SANITIZERS": "thread"
+      }
+    },
+    {
+      "name": "fuzz",
+      "displayName": "Clang Debug with libFuzzer, AddressSanitizer and UndefinedBehaviorSanitizer",
+      "inherits": ["base", "clang"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ARCHMAGE_ENABLE_FUZZ": "ON",
+        "ARCHMAGE_SANITIZERS": "address;undefined"
+      }
+    },
+    {
+      "name": "ci",
+      "displayName": "GCC RelWithDebInfo, warnings as errors",
+      "inherits": ["base", "gcc"],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ARCHMAGE_WARNINGS_AS_ERRORS": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev-debug", "configurePreset": "dev-debug" },
+    { "name": "dev-release", "configurePreset": "dev-release" },
+    { "name": "asan-ubsan", "configurePreset": "asan-ubsan" },
+    { "name": "tsan", "configurePreset": "tsan" },
+    { "name": "fuzz", "configurePreset": "fuzz" },
+    { "name": "ci", "configurePreset": "ci" }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    { "name": "dev-debug", "inherits": "base", "configurePreset": "dev-debug" },
+    { "name": "dev-release", "inherits": "base", "configurePreset": "dev-release" },
+    {
+      "name": "asan-ubsan",
+      "inherits": "base",
+      "configurePreset": "asan-ubsan",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    {
+      "name": "tsan",
+      "inherits": "base",
+      "configurePreset": "tsan",
+      "environment": {
+        "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1"
+      }
+    },
+    { "name": "ci", "inherits": "base", "configurePreset": "ci" }
+  ]
+}

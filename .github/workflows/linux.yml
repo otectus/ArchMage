@@ -1,0 +1,29 @@
+# Linux gate (plan S1-0.11, D-22). Inert: the repository has no hosting yet (plan Q-05). Once
+# hosted on GitHub it runs the same scripts that gate main locally.
+name: linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install build dependencies
+        run: >-
+          pacman -Syu --noconfirm --needed
+          base-devel git cmake ninja clang compiler-rt python python-yaml
+          qt6-base qt6-svg sqlite zstd openssl zlib libpng libjpeg-turbo lcms2
+          vulkan-headers vulkan-icd-loader glslang nlohmann-json cli11 fmt spdlog gtest
+          pkgconf xxhash harfbuzz freetype2 libraw
+      - uses: actions/checkout@v4
+      - name: Mark the checkout as safe for git inside the container
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Non-UI tiers, manifest and ledger checks
+        run: scripts/check.sh
+      - name: Offscreen UI tier
+        run: scripts/check-ui.sh

@@ -1,0 +1,2353 @@
+# ArchMage feature ledger (spec §3.2, App. A.1; plan D-30). Field reference: docs/parity/README.md.
+# Generated report: docs/parity/report.md via `python3 -I scripts/parity_report.py`.
+#
+# Parent entries mirror the requirement rows of spec §11-§20 verbatim (`outcome`); child entries
+# (id `<PARENT>-<slug>`) are the testable behaviors that implementation sessions add and update.
+schema_version: 1
+ledger:
+  spec_document: docs/ArchMage_Full_Development_Specification.md
+  spec_version: "1.0"
+  baseline: unfrozen  # option-level benchmark audit and inventory freeze pending (spec §3.1-3.2, plan Q-08)
+  domains:
+    - {prefix: NAV, title: "Navigation and common tool behavior", spec_section: "11"}
+    - {prefix: SEL, title: "Selection tools", spec_section: "12.1"}
+    - {prefix: MSK, title: "Masks and channels", spec_section: "12.2"}
+    - {prefix: LAY, title: "Layer and object management", spec_section: "13.1"}
+    - {prefix: GEO, title: "Transform tools", spec_section: "14.1"}
+    - {prefix: RET, title: "Retouch tools", spec_section: "14.2"}
+    - {prefix: FIL, title: "Filter families", spec_section: "15.2"}
+    - {prefix: PNT, title: "Brush engine", spec_section: "16.1"}
+    - {prefix: TXT, title: "Typography", spec_section: "17.1"}
+    - {prefix: VEC, title: "Vector creation", spec_section: "17.2"}
+    - {prefix: RAW, title: "RAW pipeline", spec_section: "18.1"}
+    - {prefix: AI, title: "AI-assisted capabilities", spec_section: "19.1"}
+    - {prefix: ANM, title: "Timeline and animation", spec_section: "20.1"}
+    - {prefix: PIX, title: "Pixel art and game assets", spec_section: "20.2"}
+features:
+
+  # NAV: Navigation and common tool behavior (spec §11)
+  - id: NAV-01
+    parent: null
+    title: "Zoom and fit navigation"
+    outcome: "Smooth zoom, fit, fill, actual pixels, zoom-to-selection, scrub zoom, animated navigation with reduced-motion support"
+    spec_section: "11"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'usable shell' and 'initial navigation/input checks'; Stage 1 subset per plan §1.6 (wheel zoom, fit, 100%, zoom tool)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-02
+    parent: null
+    title: "Pan, rotation, mirror and navigator views"
+    outcome: "Pan, canvas rotation, temporary mirror view, navigator thumbnail, independent views of one document"
+    spec_section: "11"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'initial navigation/input checks'; Stage 1 subset per plan §1.6 (hand tool, Space pan)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-03
+    parent: null
+    title: "Rulers, units, guides, grids and snapping"
+    outcome: "Rulers, unit switching, guides, guide layouts, grids, perspective grids, smart guides, configurable snapping"
+    spec_section: "11"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: plan D-29 assigns unit switching to M2; §28 M2 'transform/crop fundamentals' need guides and snapping"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-04
+    parent: null
+    title: "Canvas overlays and grids"
+    outcome: "Pixel grid, transparency grid, configurable pasteboard, gamut/selection/mask overlays, hide extras"
+    spec_section: "11"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'initial navigation/input checks'; Stage 1 subset per plan §1.6 (transparency grid)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-05
+    parent: null
+    title: "Eyedropper and sample points"
+    outcome: "Eyedropper with configurable sample radius, source layers, color space, and channel readout; persistent sample points"
+    spec_section: "11"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'usable shell'; Stage 1 subset per plan S1-7.4 (eyedropper sampling the composite)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-06
+    parent: null
+    title: "Measurement and annotation"
+    outcome: "Measurements, angles, custom scale calibration, area/count annotations, exportable measurement log"
+    spec_section: "11"
+    scope: null
+    milestone: M7
+    milestone_basis: "inferred: §28 M7 'scientific imaging modules' (measurement scales and logs, spec §21.3)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-07
+    parent: null
+    title: "Command palette, help and shortcut editing"
+    outcome: "Searchable command palette, tool search, contextual help, shortcut conflict editor, repeat-last-operation"
+    spec_section: "11"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: plan §1.7 places the command palette and shortcut editor in M2 to M9 (Q-10)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: NAV-08
+    parent: null
+    title: "Drag and drop, clipboard and document views"
+    outcome: "Drag-and-drop open/place behavior, rich clipboard, cross-document copying, duplicate view, detachable tabs"
+    spec_section: "11"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'document tabs'; Stage 1 subset per plan §1.3 (tabs; split and detach deferred)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # SEL: Selection tools (spec §12.1)
+  - id: SEL-01
+    parent: null
+    title: "Marquee selections"
+    outcome: "Rectangular and elliptical marquee, single-row/column selection, fixed size/aspect, antialiasing, feather"
+    spec_section: "12.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'simple selections'; Stage 1 subset per plan §1.3 (rectangular and elliptical marquee)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-02
+    parent: null
+    title: "Lasso selections"
+    outcome: "Freehand, polygonal, and edge-following magnetic lasso; adjustable edge sensitivity and point editing"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-03
+    parent: null
+    title: "Color tolerance (wand) selection"
+    outcome: "Color tolerance/wand selection with contiguous and global modes, sample-source control, transparency handling"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-04
+    parent: null
+    title: "Brush, growth and flood selection"
+    outcome: "Brush-based selection, quick region growth, flood selection with gap closing and edge sensitivity"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-05
+    parent: null
+    title: "Range and content-based selection"
+    outcome: "Color range, luminance, channel, focus/depth, object, subject, sky, and people/part selection as available modules"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite' for color, luminance and channel ranges; model-based subject, sky and people selection is M6 (§28 M3 exit)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-06
+    parent: null
+    title: "Selection combination and modification"
+    outcome: "Add, subtract, intersect, replace, invert, select all, deselect, reselect, grow, shrink, border, smooth, feather"
+    spec_section: "12.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'simple selections'; Stage 1 subset per plan §1.3 (replace, add, subtract, invert, all, none); remainder §28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-07
+    parent: null
+    title: "Selection transform and named selections"
+    outcome: "Move/transform the selection boundary independently of selected pixels; save/load named selections"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-08
+    parent: null
+    title: "Selection from layers, paths, masks and shapes"
+    outcome: "Select from layer alpha, path, mask, channel, text, vector shape, or object bounds"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-09
+    parent: null
+    title: "Selection refinement workspace"
+    outcome: "Dedicated refinement workspace with edge radius, hair/fur/transparency refinement, decontamination, and preview backgrounds"
+    spec_section: "12.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: SEL-10
+    parent: null
+    title: "Selection conversion, clipboard, fill and stroke"
+    outcome: "Convert selection to mask/path/channel, copy/cut/paste inside or outside, selected-area fill and stroke"
+    spec_section: "12.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'simple selections'; Stage 1 subset per plan S1-8.5 (fill selection with the foreground color); remainder §28 M3 'full manual selection/refinement suite'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # MSK: Masks and channels (spec §12.2)
+  - id: MSK-01
+    parent: null
+    title: "Layer, vector, group and named masks"
+    outcome: "Raster layer masks, vector masks, group masks, multiple effect masks, and reusable named masks"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'masks/channels'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-02
+    parent: null
+    title: "Mask display, density and linkage controls"
+    outcome: "Independent mask visibility, enable/disable, inversion, density, feather, visualization, and transform linkage"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'masks/channels'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-03
+    parent: null
+    title: "Clipping chains"
+    outcome: "Clipping chains with an explicit base object and predictable ordering through groups"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'clipping'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-04
+    parent: null
+    title: "Parametric and combined masks"
+    outcome: "Parametric luminosity/color masks and live combinations of raster, vector, and range masks"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'masks/channels'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-05
+    parent: null
+    title: "Editing masks with the core tools"
+    outcome: "Paint, paste, fill, filter, and transform a mask with the same core tools where meaningful"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'masks/channels'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-06
+    parent: null
+    title: "Channel inspection and named channels"
+    outcome: "Channel inspection, isolate/composite display, duplicate/split/merge, named alpha and spot channels"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'masks/channels'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-07
+    parent: null
+    title: "Channel calculations and apply image"
+    outcome: "Channel calculations and apply-image operations with source document/layer/channel, blend, inversion, scale, and offset"
+    spec_section: "12.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'channel calculations'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: MSK-08
+    parent: null
+    title: "Mask and selection conversion"
+    outcome: "Mask-to-selection and selection-to-mask workflows without unwanted profile conversion"
+    spec_section: "12.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'masks/channels'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # LAY: Layer and object management (spec §13.1)
+  - id: LAY-01
+    parent: null
+    title: "Layer content types"
+    outcome: "Raster, vector, text, adjustment, fill, group, embedded/linked object, RAW, video, and generator content types"
+    spec_section: "13.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'layers' (raster only, plan §1.3); other content types §28 M2, M4 (RAW) and M7 (video)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-02
+    parent: null
+    title: "Layer management operations"
+    outcome: "Create, rename, reorder, duplicate, delete, group, ungroup, multi-select, search, filter, color-label, and collapse"
+    spec_section: "13.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'layers'; Stage 1 subset per plan §1.3 (add, remove, rename, reorder, duplicate); groups §28 M2"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-03
+    parent: null
+    title: "Visibility, opacity and locks"
+    outcome: "Visibility, solo, opacity, fill opacity, alpha lock, pixel lock, position lock, complete lock, linked movement"
+    spec_section: "13.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'layers'; Stage 1 subset per plan §1.3 (visibility, opacity, full lock)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-04
+    parent: null
+    title: "Align and distribute"
+    outcome: "Align/distribute by selection, key object, canvas, or board; sensible support for transformed bounds"
+    spec_section: "13.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: §28 M2 'transform/crop fundamentals'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-05
+    parent: null
+    title: "Merge, stamp, flatten, rasterize and trim"
+    outcome: "Merge selected/visible, stamp visible to new layer, flatten, rasterize, trim transparent bounds; all undoable"
+    spec_section: "13.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: §28 M2 'layered editing and nondestructive structure'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-06
+    parent: null
+    title: "Layer compositions"
+    outcome: "Layer compositions storing selected visibility, position, and appearance states; compare and batch export"
+    spec_section: "13.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'layer compositions'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-07
+    parent: null
+    title: "Auto-align and auto-blend"
+    outcome: "Auto-align and auto-blend stacks, with projections and explicit output layers/masks"
+    spec_section: "13.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'photo merges'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: LAY-08
+    parent: null
+    title: "Background layer, frames, isolation and replacement"
+    outcome: "Background-layer behavior, frames/placeholders, object isolation, and content replacement"
+    spec_section: "13.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: §28 M2 'embedded/linked objects' (content replacement)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # GEO: Transform tools (spec §14.1)
+  - id: GEO-01
+    parent: null
+    title: "Transform operations"
+    outcome: "Move, scale, rotate, skew, distort, perspective, flip, reference point, numeric transform, transform again/duplicate"
+    spec_section: "14.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'transform/crop fundamentals'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-02
+    parent: null
+    title: "Free transform across content types"
+    outcome: "Free transform on raster/vector/text/masks/groups; unified handles with type-appropriate behavior"
+    spec_section: "14.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'transform/crop fundamentals'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-03
+    parent: null
+    title: "Crop, straighten and canvas size"
+    outcome: "Nondestructive crop, straighten, perspective crop, canvas resize, trim, reveal-all, crop presets"
+    spec_section: "14.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'transform/crop fundamentals'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-04
+    parent: null
+    title: "Resampling methods"
+    outcome: "Resample with nearest, bilinear, bicubic families, Lanczos, and validated edge/detail-preserving options"
+    spec_section: "14.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: required by §28 M2 'transform/crop fundamentals'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-05
+    parent: null
+    title: "Warp and puppet deformation"
+    outcome: "Mesh/curve warp, split warp, cylindrical warp, puppet deformation with pins and rigidity"
+    spec_section: "14.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'advanced transforms/warp/liquify'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-06
+    parent: null
+    title: "Liquify deformation"
+    outcome: "Liquify-style deformation: push, twirl, pinch/bloat, smooth/reconstruct, freeze/thaw, pressure controls"
+    spec_section: "14.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'advanced transforms/warp/liquify'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-07
+    parent: null
+    title: "Perspective planes"
+    outcome: "Perspective planes for placement, cloning, and painting; multi-plane adjustment and vanishing-point aids"
+    spec_section: "14.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "inferred: §28 M3 'advanced transforms'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: GEO-08
+    parent: null
+    title: "Content-aware scaling and seam carving"
+    outcome: "Content-sensitive scaling and seam carving with protect/remove masks and preview"
+    spec_section: "14.1"
+    scope: null
+    milestone: M3
+    milestone_basis: "inferred: §28 M3 'conventional content-aware processing'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # RET: Retouch tools (spec §14.2)
+  - id: RET-01
+    parent: null
+    title: "Clone stamp"
+    outcome: "Clone stamp with aligned/unaligned sampling, several sources, cross-document sources, offset, rotation, scale, mirror, and overlay"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'clone/heal/patch workflows'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-02
+    parent: null
+    title: "Healing, patch and red-eye repair"
+    outcome: "Healing brush, spot healing, patch repair, red-eye reduction, blemish/dust cleanup"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'clone/heal/patch workflows'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-03
+    parent: null
+    title: "Content-aware fill"
+    outcome: "Content-aware fill with editable sampling region, exclusions, structural guidance, and independent output"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'conventional content-aware processing'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-04
+    parent: null
+    title: "Content-aware move and extend"
+    outcome: "Content-aware move/extend and patching, with source/target blending controls"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'conventional content-aware processing'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-05
+    parent: null
+    title: "Toning, focus, smudge and eraser tools"
+    outcome: "Dodge, burn, sponge, blur, sharpen, smudge, color replacement, ordinary/background/magic erasers"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "inferred: §28 M3 retouch depth; the ordinary eraser ships in M1 under PNT-05"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-06
+    parent: null
+    title: "Model-assisted cleanup"
+    outcome: "Reflection/distraction/wire removal and more advanced cleanup through optional image-analysis models"
+    spec_section: "14.2"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M3 exit: model-assisted items are assigned to M6"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-07
+    parent: null
+    title: "Frequency separation"
+    outcome: "Frequency separation workflow with reversible setup and precision-appropriate reconstruction"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "inferred: §28 M3 retouch depth"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RET-08
+    parent: null
+    title: "History brush"
+    outcome: "History brush and artistic-history effects using explicit saved source states"
+    spec_section: "14.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "inferred: §28 M3 'brush/source controls'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # FIL: Filter families (spec §15.2)
+  - id: FIL-01
+    parent: null
+    title: "Blur"
+    outcome: "Gaussian, box, surface/edge-preserving, motion, radial/zoom, lens/bokeh, field/iris/tilt-shift, directional/path variants"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-02
+    parent: null
+    title: "Sharpen"
+    outcome: "Unsharp, edge-aware/smart, high-pass, deconvolution where validated, channel/luminance controls"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-03
+    parent: null
+    title: "Noise"
+    outcome: "Add noise, median, despeckle, spatial/chroma denoise, multiscale and optional model-assisted denoise"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'; model-assisted denoise §28 M6"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-04
+    parent: null
+    title: "Distort"
+    outcome: "Displacement maps, wave/ripple, polar conversion, lens distortions, pinch, spherize, twirl, offset, perspective"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-05
+    parent: null
+    title: "Stylize"
+    outcome: "Edge detection, emboss, pixelation/mosaic, halftone, poster effects, oil-like stylization, outlines"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-06
+    parent: null
+    title: "Artistic/texture"
+    outcome: "Pencil/charcoal/ink-like treatments, paper/canvas/grain, texture mapping, configurable filter combinations"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-07
+    parent: null
+    title: "Render"
+    outcome: "Solid/gradient/pattern fills, clouds/noise, fibers, light effects, procedural texture and shape generators"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'; procedural texture generators §28 M6"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-08
+    parent: null
+    title: "Utility"
+    outcome: "Minimum/maximum, morphological operations, custom convolution, channel math, distance fields, normal/height conversion"
+    spec_section: "15.2"
+    scope: null
+    milestone: M3
+    milestone_basis: "§28 M3 'filter families'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-09
+    parent: null
+    title: "Photo synthesis"
+    outcome: "Panorama stitching, HDR merge, focus stacking, exposure fusion, median/mean stacks, alignment and deghosting"
+    spec_section: "15.2"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'photo merges'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: FIL-10
+    parent: null
+    title: "Model-assisted effects"
+    outcome: "Restoration, colorization, depth-based effects, relighting and style/content transformations through versioned modules"
+    spec_section: "15.2"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'restoration/upscaling, depth/relighting'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # PNT: Brush engine (spec §16.1)
+  - id: PNT-01
+    parent: null
+    title: "Brush engines"
+    outcome: "Round, shaped, image-tip, textured, dual-tip, spray/scatter, pattern, particle, and procedural brush engines"
+    spec_section: "16.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'basic brush/eraser' (round tip, plan §1.3); other engines §28 M5"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-02
+    parent: null
+    title: "Brush parameters"
+    outcome: "Size, hardness, spacing, angle, roundness, opacity, flow, buildup, transfer, wetness, pickup, load, and mixing where supported"
+    spec_section: "16.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'basic brush/eraser' (size, hardness, spacing, opacity, plan §1.3); remainder §28 M5"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-03
+    parent: null
+    title: "Input dynamics"
+    outcome: "Pressure, tilt, barrel rotation, velocity, direction, distance, random, and time dynamics with editable response curves"
+    spec_section: "16.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'basic brush/eraser' (pressure to size when a tablet is present, plan §1.3); full dynamics §28 M5"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-04
+    parent: null
+    title: "Stroke stabilization and prediction"
+    outcome: "Stabilization, weighted smoothing, lazy-mouse/string, predictive preview, taper, and optional snap assistance"
+    spec_section: "16.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'full brush editor and dynamics'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-05
+    parent: null
+    title: "Pixel drawing, erasing and painting constraints"
+    outcome: "Pencil/pixel-perfect drawing, erasing, alpha lock, selection clipping, painting through masks and clipping groups"
+    spec_section: "16.1"
+    scope: null
+    milestone: M1
+    milestone_basis: "§28 M1 'basic brush/eraser' (erasing and selection clipping, plan §1.3); masks and clipping §28 M2; pixel-perfect drawing §28 M7"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-06
+    parent: null
+    title: "Symmetry, tiling and painting assistants"
+    outcome: "Symmetry, radial/kaleidoscope modes, wraparound/tiled painting, perspective and curve assistants"
+    spec_section: "16.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'assistants'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-07
+    parent: null
+    title: "Brush editor and presets"
+    outcome: "Brush editor with test area, live preview, reset, parameter search, presets, tags, favorites, and recent brushes"
+    spec_section: "16.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'full brush editor'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-08
+    parent: null
+    title: "Natural media and paint mixing"
+    outcome: "Paint mixing, smudge, mixer brushes, dry media, wet watercolor, oils/acrylics, paper texture, and impasto modules"
+    spec_section: "16.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'natural media'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-09
+    parent: null
+    title: "Vector inking"
+    outcome: "Editable vector inking with pressure width, line cleanup, intersection erasing, and brush-styled paths"
+    spec_section: "16.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'vector inking'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PNT-10
+    parent: null
+    title: "References, palettes and swatches"
+    outcome: "Reference board, detached reference view, palette extraction, swatches, harmonies, and canvas sampling"
+    spec_section: "16.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'resource manager'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # TXT: Typography (spec §17.1)
+  - id: TXT-01
+    parent: null
+    title: "Text objects and frames"
+    outcome: "Point text, paragraph frames, linked text frames, text on paths, text inside shapes, editable text warp"
+    spec_section: "17.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'basic editable text/shapes'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-02
+    parent: null
+    title: "Character and paragraph formatting"
+    outcome: "Character/paragraph styles, mixed formatting, kerning, tracking, leading, baseline shift, alignment, indents, tabs"
+    spec_section: "17.1"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: §28 M2 'basic editable text' needs basic formatting; typographic depth §28 M5 'international typography'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-03
+    parent: null
+    title: "OpenType features and font browsing"
+    outcome: "OpenType features, ligatures, alternates, variable-font axes, glyph browser, fallback fonts, font search and preview"
+    spec_section: "17.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'international typography'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-04
+    parent: null
+    title: "Bidirectional, complex-script and vertical text"
+    outcome: "RTL and bidirectional text, complex scripts, vertical text where supported, Unicode normalization policy, IME composition"
+    spec_section: "17.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'international typography'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-05
+    parent: null
+    title: "Lists, line breaking and spelling"
+    outcome: "Bulleted/numbered lists, language-aware line breaking, hyphenation, overset warnings, spell checking through optional dictionaries"
+    spec_section: "17.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'international typography'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-06
+    parent: null
+    title: "Text appearance and conversion"
+    outcome: "Editable outlines/fills/effects, text-to-path/selection conversion, font replacement, package/export policy"
+    spec_section: "17.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'international typography'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-07
+    parent: null
+    title: "Color fonts and grapheme-accurate editing"
+    outcome: "Color fonts/emoji with documented format support, precise caret movement and selection by grapheme cluster"
+    spec_section: "17.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'international typography'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: TXT-08
+    parent: null
+    title: "Font identification and template text"
+    outcome: "Font identification suggestions and editable dynamic/template text as optional analysis/data features"
+    spec_section: "17.1"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'templates/data merge'; model-based font identification §28 M6"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # VEC: Vector creation (spec §17.2)
+  - id: VEC-01
+    parent: null
+    title: "Path construction and editing"
+    outcome: "Pen, curvature, pencil/freehand, node editing, corner/smooth/symmetric handles, path split/join/reverse/simplify"
+    spec_section: "17.2"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'vector inking and geometry'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-02
+    parent: null
+    title: "Live shapes"
+    outcome: "Live rectangles, rounded rectangles, ellipses, polygons, stars, lines/arrows, custom shapes, parameter editing"
+    spec_section: "17.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "§28 M2 'basic editable text/shapes'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-03
+    parent: null
+    title: "Boolean path operations"
+    outcome: "Boolean union/subtract/intersect/exclude/divide, compound paths, fill rules, editable Boolean groups"
+    spec_section: "17.2"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'vector inking and geometry'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-04
+    parent: null
+    title: "Fills, strokes and dashes"
+    outcome: "Solid/gradient/pattern fills, multiple strokes, dashes, caps/joins, arrowheads, variable widths, brush strokes"
+    spec_section: "17.2"
+    scope: null
+    milestone: M2
+    milestone_basis: "inferred: basic editable shapes (§28 M2) need fill and stroke; advanced strokes §28 M5"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-05
+    parent: null
+    title: "Path effects, clipping and envelopes"
+    outcome: "Expand stroke/appearance, offset paths, clipping, vector masks, blend/interpolation between objects, envelope distortion"
+    spec_section: "17.2"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'vector inking and geometry'; vector masks are tracked under MSK-01 (M2)"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-06
+    parent: null
+    title: "Symbols, shared styles and repeats"
+    outcome: "Symbols/instances with overrides, shared styles, live repeats, pattern design, grids and distribution"
+    spec_section: "17.2"
+    scope: null
+    milestone: M5
+    milestone_basis: "§28 M5 'symbols'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-07
+    parent: null
+    title: "Bitmap tracing"
+    outcome: "Bitmap tracing with color/threshold controls, corner preservation, noise cleanup, and editable output"
+    spec_section: "17.2"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'vector inking and geometry'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: VEC-08
+    parent: null
+    title: "Vector snapping"
+    outcome: "Snapping to nodes, intersections, bounds, centers, guides, baseline, and pixels, with visible snap feedback"
+    spec_section: "17.2"
+    scope: null
+    milestone: M5
+    milestone_basis: "inferred: §28 M5 'vector inking and geometry'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # RAW: RAW pipeline (spec §18.1)
+  - id: RAW-01
+    parent: null
+    title: "RAW and DNG import"
+    outcome: "RAW/DNG import through verified decoders; orientation, metadata, camera profile, white balance, black/white levels"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-02
+    parent: null
+    title: "Demosaic quality and highlight reconstruction"
+    outcome: "Multiple validated demosaic/development quality modes, highlight reconstruction, hot-pixel handling"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-03
+    parent: null
+    title: "Tone and color development controls"
+    outcome: "Exposure, contrast, curves, color grading, HSL/channel controls, local contrast, dehaze, texture, grain, vignette"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-04
+    parent: null
+    title: "Lens and geometry corrections"
+    outcome: "Lens distortion, chromatic aberration, shading/vignetting, perspective/geometry, profile overrides"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-05
+    parent: null
+    title: "Denoise and sharpening"
+    outcome: "Luminance/chroma denoise, sharpening with masking, optional model-assisted denoise and super-resolution"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'; model-assisted denoise and super-resolution §28 M6"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-06
+    parent: null
+    title: "Local development masks"
+    outcome: "Local brush/gradient/range/object/subject/sky masks, Boolean combinations, tracking between compatible variants"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'; object, subject and sky masks §28 M6"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-07
+    parent: null
+    title: "Re-editable RAW layers and virtual copies"
+    outcome: "Re-editable RAW layers inside composites; source-preserving development and virtual copies"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-08
+    parent: null
+    title: "Exposure merges, panoramas and stacks"
+    outcome: "HDR/exposure merge, panorama, focus stack, alignment, deghosting, source exclusion, and provenance"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'photo merges'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-09
+    parent: null
+    title: "Comparison, snapshots, presets and sync"
+    outcome: "Before/after, snapshots, parameter copy/paste, presets, batch synchronization and export"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: RAW-10
+    parent: null
+    title: "Camera support reporting"
+    outcome: "Camera support reporting and understandable unsupported-file diagnostics"
+    spec_section: "18.1"
+    scope: null
+    milestone: M4
+    milestone_basis: "§28 M4 'RAW development'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # AI: AI-assisted capabilities (spec §19.1)
+  - id: AI-01
+    parent: null
+    title: "Segmentation"
+    outcome: "Subject/object/background/sky segmentation and interactive region refinement"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'segmentation/matting'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-02
+    parent: null
+    title: "Matting"
+    outcome: "Hair/fur/transparency matting with edge-color handling"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'segmentation/matting'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-03
+    parent: null
+    title: "Removal, inpainting and generative fill"
+    outcome: "Object removal, inpainting, generative fill, canvas expansion/outpainting"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'generative editing'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-04
+    parent: null
+    title: "Image generation"
+    outcome: "Text-to-image, image-to-image, reference-guided generation, regional instructions and variation comparison"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'generative editing'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-05
+    parent: null
+    title: "Restoration and upscaling"
+    outcome: "Denoising, restoration, deblurring, upscaling, colorization, artifact reduction"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'restoration/upscaling'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-06
+    parent: null
+    title: "Depth, normals and relighting"
+    outcome: "Depth/normal estimation, background substitution, relighting, compositing harmonization"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'depth/relighting'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-07
+    parent: null
+    title: "Generation conditioning"
+    outcome: "Pose/edge/depth/sketch/mask conditioning, strength controls, reusable workflows where supported"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "inferred: §28 M6 'generative editing'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-08
+    parent: null
+    title: "Assisted command proposals"
+    outcome: "Natural-language assistance that proposes ordinary ArchMage operations and editable results"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'assisted command proposals'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-09
+    parent: null
+    title: "Model management and provider adapters"
+    outcome: "Local model management and optional configured remote-provider adapters"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'local inference worker, provider adapters'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: AI-10
+    parent: null
+    title: "Result provenance and variants"
+    outcome: "Result provenance, processing-region visualization, variants, cancellation, and cost/resource feedback"
+    spec_section: "19.1"
+    scope: null
+    milestone: M6
+    milestone_basis: "§28 M6 'variation/provenance UI'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # ANM: Timeline and animation (spec §20.1)
+  - id: ANM-01
+    parent: null
+    title: "Layer animation and cels"
+    outcome: "Raster/vector layer animation, cels, linked cels, blank/duplicate frames, exposure lengths, tracks and groups"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'frame/cel/keyframe timeline'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-02
+    parent: null
+    title: "Onion skin and playback ranges"
+    outcome: "Onion skin with tint/opacity/range controls, playback loop ranges, markers, frame tags, timeline zoom"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'frame/cel/keyframe timeline'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-03
+    parent: null
+    title: "Keyframed properties"
+    outcome: "Keyframed position, scale, rotation, opacity, supported effects/masks, easing, interpolation, curve editor"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'frame/cel/keyframe timeline'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-04
+    parent: null
+    title: "Audio reference and synchronization"
+    outcome: "Audio reference/waveform, scrubbing, timing markers, muted preview, exact export synchronization"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'audio/video layer handling'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-05
+    parent: null
+    title: "Video layers"
+    outcome: "Video layers, trimming, in/out points, transforms, adjustment/effect stacks, time remapping where supported"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'audio/video layer handling'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-06
+    parent: null
+    title: "Animation export"
+    outcome: "Frame animation export to GIF/APNG/WebP and image sequences; video export through available codecs"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "inferred: §28 M7 exit 'motion/sprite journeys'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-07
+    parent: null
+    title: "Timelapse recording"
+    outcome: "Timelapse recording with resolution/privacy/storage controls and interruption recovery"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'timelapse'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: ANM-08
+    parent: null
+    title: "Motion-assisted operations and rotoscoping"
+    outcome: "Motion/optical-flow-assisted operations and basic rotoscope/mask tracking as explicit advanced modules"
+    spec_section: "20.1"
+    scope: null
+    milestone: M7
+    milestone_basis: "inferred: §28 M7 'motion'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+
+  # PIX: Pixel art and game assets (spec §20.2)
+  - id: PIX-01
+    parent: null
+    title: "Pixel-exact drawing and fill"
+    outcome: "Exact pixel pencil/eraser, pixel-perfect stroke cleanup, contiguous fill, integer zoom and pixel grid"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'pixel/indexed/tilemap workflows'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PIX-02
+    parent: null
+    title: "Indexed color documents"
+    outcome: "Indexed documents with stable palette indices, palette locks, remapping, sorting, ramps, cycling, dithering"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'pixel/indexed/tilemap workflows'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PIX-03
+    parent: null
+    title: "Pixel-preserving resize and rotation"
+    outcome: "Pixel-preserving resize/rotation options, nearest-neighbor defaults, explicit antialiasing controls"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'pixel/indexed/tilemap workflows'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PIX-04
+    parent: null
+    title: "Tiled painting and tilemaps"
+    outcome: "Tiled painting, tilemap layers, tile flipping/rotation, shared tile edits, tile replacement and palette variants"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'pixel/indexed/tilemap workflows'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PIX-05
+    parent: null
+    title: "Sprite sheets and metadata"
+    outcome: "Sprite-sheet packing, tags, slices, origins/pivots, trimming, padding, extrusion, JSON metadata"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'sprite export'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PIX-06
+    parent: null
+    title: "Material texture maps"
+    outcome: "Normal, height, roughness, metallic, emissive and opacity texture workflows with channel-aware previews"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "inferred: §28 M7 '3D references/UV texture tools'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []
+  - id: PIX-07
+    parent: null
+    title: "Multi-scale engine exports"
+    outcome: "Multiple scale exports and engine-friendly image/metadata presets without proprietary engine dependence"
+    spec_section: "20.2"
+    scope: null
+    milestone: M7
+    milestone_basis: "§28 M7 'sprite export'"
+    prerequisites: []
+    implementation_state: unstarted
+    fidelity_target: null
+    fidelity_verified: null
+    benchmark: {product: null, edition: null, observed_version: null, source_url: null, observed_date: null, evidence: public_documentation_only}
+    planned_capabilities: {}
+    command_id: null
+    acceptance: []
+    test_scenarios: []
+    platform_results: {}
+    limitations: []

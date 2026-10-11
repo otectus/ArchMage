@@ -1,0 +1,491 @@
+# ArchMage dependency and license manifest (spec §5.3; plan D-04, D-25; S1-0.8).
+#
+# One entry per dependency: toolchain, libraries, build and test tools and runtime components, plus
+# the fonts, brushes, fixtures, model weights and services lists (empty in S1-0). Versions pin the exact
+# packages installed on the reference development machine (profile A). `checksum` is the SHA-256 of the
+# installed package archive as listed in the pacman sync database; each was confirmed against the cached
+# archive in /var/cache/pacman/pkg on the recording date. `license` lists the identifiers `pacman -Qi`
+# reports. Redistribution notes summarize obligations for planning; they are not legal advice and must be
+# reviewed when the distribution model is decided (plan Q-02, ADR-0025).
+#
+# tests/docs/manifest_test.py fails when a CMake dependency lookup has no entry here (`lookups`);
+# --check-installed also compares each pinned version with the installed package.
+schema_version: 1
+recorded: 2026-10-11
+platform: "CachyOS (Arch Linux), x86_64; running kernel 7.2.7 with 7.2.9 installed (reboot pending); reference profile A (plan §7.2)"
+fonts: []      # none bundled (ADR-0025)
+brushes: []    # none bundled
+fixtures: []   # none yet; planned fixtures and their licenses: docs/testing/corpus-plan.md
+models: []     # no model weights in Stage 1
+services: []   # no optional services in Stage 1
+dependencies:
+
+  - id: qt6-base
+    name: "Qt 6 base modules (Core, Gui, Widgets, Test)"
+    category: library
+    usage: linked
+    lookups: [find_package:Qt6]
+    source: {type: system_package, package: qt6-base, repository: cachyos-extra-v3, upstream: "https://www.qt.io"}
+    version: "6.12.0-2.1"
+    checksum: sha256:1e805b2e3c28af5db78a683ca6296bdadb7a1bbf5f9fdc526b0984c395629b61
+    build_options: "Distribution build; QT_FEATURE_vulkan enabled (QVulkanWindow available); ships the wayland, xcb and offscreen platform plugins"
+    license: ["GPL-3.0-only", "LGPL-3.0-only", "LicenseRef-Qt-Commercial", "Qt-GPL-exception-1.0"]
+    redistribution: "If distributed, use the LGPL-3.0 option: link dynamically, ship the license texts and notices, provide or offer the corresponding Qt source, and let users replace the Qt libraries. A Qt commercial license is the alternative."
+    maintenance: "maintained; distribution package built 2026-10-07"
+    affects: ["desktop shell (ui/, apps/archmage)", "UI test tier", "canvas adapter candidates (S1-1, D-11)"]
+    notes: "Qt 6.7 is the configure floor for the QRhiWidget candidate (D-11). The native Wayland platform plugin (libqwayland.so) and the Qt6WaylandClient CMake package belong to this package."
+
+  - id: qt6-svg
+    name: "Qt SVG module"
+    category: library
+    usage: found_not_linked
+    lookups: []
+    source: {type: system_package, package: qt6-svg, repository: cachyos-extra-v3, upstream: "https://www.qt.io"}
+    version: "6.12.0-1.1"
+    checksum: sha256:2a09184c5f60c1b011a76d527441be54ba1c2c2a10f3f59fd9dfc9c4e37a3908
+    build_options: "Distribution build; requested as the Svg component of find_package(Qt6)"
+    license: ["GPL-3.0-only", "LGPL-3.0-only", "LicenseRef-Qt-Commercial", "Qt-GPL-exception-1.0"]
+    redistribution: "If distributed, use the LGPL-3.0 option: link dynamically, ship the license texts and notices, provide or offer the corresponding Qt source, and let users replace the Qt libraries. A Qt commercial license is the alternative."
+    maintenance: "maintained; distribution package built 2026-10-07"
+    affects: ["original SVG tool and panel icons (S1-7.8, D-28)"]
+    notes: "Covered by the find_package(Qt6) lookup claimed by qt6-base."
+
+  - id: sqlite
+    name: "SQLite"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:SQLite3]
+    source: {type: system_package, package: sqlite, repository: cachyos-v3, upstream: "https://www.sqlite.org/"}
+    version: "3.53.4-1"
+    checksum: sha256:c5907d2b37cd4f93f2e7831581c6df759a44cbcbb0af246a86c8871c03f65990
+    build_options: "Distribution build"
+    license: ["LicenseRef-Sqlite"]
+    redistribution: "Public domain; no obligations."
+    maintenance: "maintained; distribution package built 2026-07-25"
+    affects: ["native .archmage container (S1-4, D-13)", "recovery workspace (S1-5, D-14)"]
+
+  - id: zstd
+    name: "Zstandard"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:zstd]
+    source: {type: system_package, package: zstd, repository: cachyos-v3, upstream: "https://facebook.github.io/zstd/"}
+    version: "1.5.7-2"
+    checksum: sha256:df5bc08c0ac43fa3428586a59a21483439ffbaf7b60eb9b0a7c759c4cb586f7b
+    build_options: "Distribution build; CMake config provides zstd::libzstd_shared"
+    license: ["BSD-3-Clause", "GPL-2.0-only"]
+    redistribution: "Dual BSD-3-Clause or GPL-2.0-only; use the BSD-3-Clause option. Reproduce the copyright notice, conditions and disclaimer in documentation of binary distributions (BSD-3-Clause)."
+    maintenance: "maintained; distribution package built 2025-02-21"
+    affects: ["tile and resource blob compression (S1-4.2, D-19)"]
+
+  - id: openssl
+    name: "OpenSSL (libcrypto only)"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:OpenSSL]
+    source: {type: system_package, package: openssl, repository: cachyos-core-v3, upstream: "https://www.openssl.org"}
+    version: "3.6.5-1.1"
+    checksum: sha256:54ce7e4a068df85513f5cf0da63828cff4984ab56c0661156a0b0adc22402bb8
+    build_options: "Distribution build; only the Crypto component (EVP SHA-256) is requested"
+    license: ["Apache-2.0"]
+    redistribution: "Apache-2.0: ship the license text and any NOTICE file; mark modified files."
+    maintenance: "maintained; distribution package built 2026-09-30"
+    affects: ["SHA-256 content addressing (S1-4, D-19)"]
+
+  - id: zlib-ng-compat
+    name: "zlib (zlib-ng compatibility build)"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:ZLIB]
+    source: {type: system_package, package: zlib-ng-compat, repository: cachyos-v3, upstream: "https://github.com/zlib-ng/zlib-ng"}
+    version: "2.3.3-2"
+    checksum: sha256:91707231c0caf57c5fc62f934e9ab8ce3b1c5c12c4f4be12ffc594983b710219
+    build_options: "Distribution build of zlib-ng in zlib-compatible mode; provides libz"
+    license: ["Zlib"]
+    redistribution: "Zlib license: no notice required in binaries; altered versions must be marked."
+    maintenance: "maintained; distribution package built 2026-02-04"
+    affects: ["PNG codec dependency (S1-8, D-18)"]
+    notes: "Provides the zlib API on this system; Arch-based CI containers may install the zlib package instead."
+
+  - id: libpng
+    name: "libpng"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:PNG]
+    source: {type: system_package, package: libpng, repository: cachyos-extra-v3, upstream: "http://www.libpng.org/pub/png/libpng.html"}
+    version: "1.6.59-1.1"
+    checksum: sha256:57b105ad661bb67d11c45de3c9c576dac50bf48ab9de80a01c6f7bf5d17e3e16
+    build_options: "Distribution build"
+    license: ["libpng-2.0"]
+    redistribution: "PNG Reference Library License v2: keep the copyright notice in source distributions; mark altered versions."
+    maintenance: "maintained; distribution package built 2026-09-29"
+    affects: ["PNG open and export (S1-8.6, S1-8.7, D-18)", "PNG fuzz target (S1-5.8)"]
+
+  - id: libjpeg-turbo
+    name: "libjpeg-turbo"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:JPEG]
+    source: {type: system_package, package: libjpeg-turbo, repository: extra, upstream: "https://libjpeg-turbo.org/"}
+    version: "3.2.0-2"
+    checksum: sha256:14e743e58bbab35665d3e59ea71bd411f81a01d995e0101442f5f4c82c9de0ab
+    build_options: "Distribution build"
+    license: ["BSD-3-Clause", "IJG"]
+    redistribution: "BSD-3-Clause plus the IJG license: binary distributions must state in their documentation that the software is based in part on the work of the Independent JPEG Group."
+    maintenance: "maintained; distribution package built 2026-07-01"
+    affects: ["JPEG open and export (S1-8.6, S1-8.7, D-18)"]
+
+  - id: lcms2
+    name: "Little CMS 2"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:LCMS2, pkg_config:lcms2]
+    source: {type: system_package, package: lcms2, repository: cachyos-extra-v3, upstream: "http://www.littlecms.com/"}
+    version: "2.19.1-1.1"
+    checksum: sha256:3d5cea8b14c3e078f2515abd0592900ab729db81bedd93ec31daafddcaac3992
+    build_options: "Distribution build; no CMake config, located by cmake/FindLCMS2.cmake through pkg-config"
+    license: ["MIT"]
+    redistribution: "Keep the copyright and permission notice in distributed copies (MIT)."
+    maintenance: "maintained; distribution package built 2026-05-07"
+    affects: ["color pipeline and generated sRGB profile (S1-2.9, D-10)", "embedded ICC on import and export (S1-8)", "profile conversion experiment (S1-6.4)"]
+
+  - id: vulkan-headers
+    name: "Vulkan headers"
+    category: header_only_library
+    usage: found_not_linked
+    lookups: [find_package:Vulkan]
+    source: {type: system_package, package: vulkan-headers, repository: extra, upstream: "https://www.vulkan.org/"}
+    version: "1:1.4.363.0-1"
+    checksum: sha256:574e320444b0eac2479f2c3441c6d030176db572bca8a783bf2a67b808a11ebd
+    build_options: "Distribution package; Vulkan 1.3 is the configure floor"
+    license: ["Apache-2.0 OR MIT"]
+    redistribution: "Apache-2.0 or MIT; headers only."
+    maintenance: "maintained; distribution package built 2026-09-29"
+    affects: ["QVulkanWindow canvas candidate (S1-1, D-11)", "experimental GPU compositor (S1-6, D-12)"]
+    notes: "find_package(Vulkan) also locates the loader (vulkan-icd-loader) and the glslangValidator component (glslang)."
+
+  - id: vulkan-icd-loader
+    name: "Vulkan loader"
+    category: runtime_component
+    usage: found_not_linked
+    lookups: []
+    source: {type: system_package, package: vulkan-icd-loader, repository: cachyos-extra-v3, upstream: "https://www.vulkan.org/"}
+    version: "1.4.363.0-1.1"
+    checksum: sha256:cbaa979a4d83d20efeb0701f91ac792e577628dd202790f66ff347f08cf51e17
+    build_options: "Distribution build"
+    license: ["Apache-2.0"]
+    redistribution: "Apache-2.0. A system component on Linux; not bundled."
+    maintenance: "maintained; distribution package built 2026-10-03"
+    affects: ["QVulkanWindow canvas candidate (S1-1, D-11)", "experimental GPU compositor (S1-6, D-12)"]
+    notes: "Covered by the find_package(Vulkan) lookup claimed by vulkan-headers."
+
+  - id: vulkan-validation-layers
+    name: "Vulkan validation layers"
+    category: development_tool
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: vulkan-validation-layers, repository: cachyos-extra-v3, upstream: "https://www.vulkan.org/"}
+    version: "1.4.363.0-1.1"
+    checksum: sha256:5c1869324d188f2efbb25525c6b8e6c2b9b3137691dfe69f5542bffdbd6eb981
+    build_options: "Distribution build"
+    license: ["Apache-2.0"]
+    redistribution: "Development and test use only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-10-03"
+    affects: ["validation-clean teardown check (S1-1.3)", "Debug GPU device bootstrap (S1-6.1)"]
+
+  - id: glslang
+    name: "glslang (glslangValidator)"
+    category: build_tool
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: glslang, repository: cachyos-extra-v3, upstream: "https://github.com/KhronosGroup/glslang"}
+    version: "1:1.4.363.0-1.1"
+    checksum: sha256:ca89ec5d05f6093957027eba42250bea9be821e2b595e0dc2a653faa37542efa
+    build_options: "Distribution build; FindVulkan component glslangValidator"
+    license: ["BSD-3-Clause"]
+    redistribution: "Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-10-03"
+    affects: ["build-time SPIR-V compilation of compute shaders (S1-6.2, D-12)"]
+    notes: "Covered by the find_package(Vulkan) lookup claimed by vulkan-headers."
+
+  - id: nlohmann-json
+    name: "nlohmann/json"
+    category: header_only_library
+    usage: found_not_linked
+    lookups: [find_package:nlohmann_json]
+    source: {type: system_package, package: nlohmann-json, repository: extra, upstream: "https://github.com/nlohmann/json"}
+    version: "3.12.0-2"
+    checksum: sha256:55968568ee1c8f3ffe691b51d4f6660acb40ee82f474d41fc6e18c571e87ddc4
+    build_options: "Distribution package (header-only)"
+    license: ["MIT"]
+    redistribution: "Keep the copyright and permission notice in distributed copies (MIT)."
+    maintenance: "maintained; distribution package built 2025-04-24"
+    affects: ["command envelope JSON (S1-2.5, App. A.2)", "CLI --json output (S1-4.8)"]
+
+  - id: cli11
+    name: "CLI11"
+    category: header_only_library
+    usage: linked
+    lookups: [find_package:CLI11]
+    source: {type: system_package, package: cli11, repository: extra, upstream: "https://github.com/CLIUtils/CLI11"}
+    version: "2.7.2-1"
+    checksum: sha256:13dd44ef92e612b09b36f2b594651a1195b16c512d3b084d856a170b72755e8e
+    build_options: "Distribution package (header-only)"
+    license: ["BSD-3-Clause"]
+    redistribution: "Reproduce the copyright notice, conditions and disclaimer in documentation of binary distributions (BSD-3-Clause)."
+    maintenance: "maintained; distribution package built 2026-08-05"
+    affects: ["archmage-cli argument parsing (S1-0 onward)"]
+
+  - id: fmt
+    name: "{fmt}"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:fmt]
+    source: {type: system_package, package: fmt, repository: cachyos-extra-v3, upstream: "https://fmt.dev"}
+    version: "12.2.0-1.1"
+    checksum: sha256:aa9ee0cfc7e245f21a95f8caf6e695c2d935ef6b9e23b8981d7c60bc980d8fa4
+    build_options: "Distribution build (shared library)"
+    license: ["MIT"]
+    redistribution: "Keep the copyright and permission notice in distributed copies (MIT). The optional exception waives notice for compiled object code."
+    maintenance: "maintained; distribution package built 2026-06-18"
+    affects: ["logging through spdlog (D-07)"]
+
+  - id: spdlog
+    name: "spdlog"
+    category: library
+    usage: found_not_linked
+    lookups: [find_package:spdlog]
+    source: {type: system_package, package: spdlog, repository: cachyos-extra-v3, upstream: "https://github.com/gabime/spdlog"}
+    version: "1.17.0-2.1"
+    checksum: sha256:08f88332858b1aa8159145c2953618e823bf6b0088ef358834d1db002cad5568
+    build_options: "Distribution build; compiled library using the external fmt (SPDLOG_FMT_EXTERNAL ON)"
+    license: ["MIT"]
+    redistribution: "Keep the copyright and permission notice in distributed copies (MIT)."
+    maintenance: "maintained; distribution package built 2026-02-17"
+    affects: ["engine and application logging (D-07)"]
+
+  - id: gtest
+    name: "GoogleTest and GoogleMock"
+    category: test_framework
+    usage: test_time
+    lookups: [find_package:GTest]
+    source: {type: system_package, package: gtest, repository: cachyos-extra-v3, upstream: "https://github.com/google/googletest"}
+    version: "1.18.0-1.1"
+    checksum: sha256:1bbe62114676b67fc7e00602e249d51b480b98b8b548c2ac993912b1393da996
+    build_options: "Distribution build"
+    license: ["BSD-3-Clause"]
+    redistribution: "Test-only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-08-31"
+    affects: ["unit and integration test tiers (D-05)"]
+
+  - id: pkgconf
+    name: "pkgconf (pkg-config)"
+    category: build_tool
+    usage: build_time
+    lookups: [find_package:PkgConfig]
+    source: {type: system_package, package: pkgconf, repository: cachyos-core-v3, upstream: "https://github.com/pkgconf/pkgconf"}
+    version: "3.0.7-1.1"
+    checksum: sha256:1d5b347f34803069f10871e6e68c40e1138062e2f478dc3b61cedd3a63202968
+    build_options: "Distribution build"
+    license: ["ISC"]
+    redistribution: "Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-09-05"
+    affects: ["locating xxHash, HarfBuzz, FreeType, LibRaw and Little CMS (D-04)"]
+
+  - id: xxhash
+    name: "xxHash (libxxhash)"
+    category: library
+    usage: found_not_linked
+    lookups: [pkg_config:libxxhash]
+    source: {type: system_package, package: xxhash, repository: extra, upstream: "https://cyan4973.github.io/xxHash/"}
+    version: "0.8.4-1"
+    checksum: sha256:ef60bad0552de3eb8a0e1e2a07eb1bcaceaa771a5f36401a2cf0de135ffcc72b
+    build_options: "Distribution build"
+    license: ["GPL2", "BSD"]
+    redistribution: "The library is BSD-2-Clause per the installed LICENSE (the package's GPL-2.0 part is the xxhsum tool, which ArchMage does not use): reproduce the notice in documentation of binary distributions."
+    maintenance: "maintained; distribution package built 2026-09-19"
+    affects: ["in-memory XXH3 cache keys (S1-2.7, D-19)"]
+    notes: "pacman reports the coarse license list 'GPL2 BSD' for the whole package."
+
+  - id: harfbuzz
+    name: "HarfBuzz"
+    category: library
+    usage: found_not_linked
+    lookups: [pkg_config:harfbuzz]
+    source: {type: system_package, package: harfbuzz, repository: cachyos-extra-v3, upstream: "https://harfbuzz.github.io/"}
+    version: "14.6.0-1.1"
+    checksum: sha256:2a68c25b5b5a3eb129bd363f6cdd7d0c08ee3bdb34bffd7b6dc59ce2cffc3f99
+    build_options: "Distribution build; its CMake config has no version file, so pkg-config is used"
+    license: ["MIT"]
+    redistribution: "Keep the copyright and permission notice in distributed copies (MIT). (HarfBuzz 'Old MIT' license.)"
+    maintenance: "maintained; distribution package built 2026-10-06"
+    affects: ["shaped Arabic and Devanagari text probe (S1-6.7, M0-E5)"]
+
+  - id: freetype2
+    name: "FreeType"
+    category: library
+    usage: found_not_linked
+    lookups: [pkg_config:freetype2]
+    source: {type: system_package, package: freetype2, repository: cachyos-extra-v3, upstream: "https://www.freetype.org/"}
+    version: "2.14.3-1.2"
+    checksum: sha256:db0b34057ec5619a4dc0ca17c11469595e7efcef92ba09cca42c4b5922c9d206
+    build_options: "Distribution build"
+    license: ["FTL OR GPL-2.0-or-later"]
+    redistribution: "Use the FTL option: credit The FreeType Project in the documentation of distributed binaries."
+    maintenance: "maintained; distribution package built 2026-04-14"
+    affects: ["glyph rasterization in the text probe (S1-6.7, M0-E5)"]
+
+  - id: libraw
+    name: "LibRaw (thread-safe libraw_r)"
+    category: library
+    usage: found_not_linked
+    lookups: [pkg_config:libraw_r]
+    source: {type: system_package, package: libraw, repository: cachyos-extra-v3, upstream: "https://www.libraw.org/"}
+    version: "0.22.2-1.1"
+    checksum: sha256:5ee8d03d2b41cb0071e69f3a814a7a174bd097c4de2093befa945c640baa0818
+    build_options: "Distribution build; the reentrant libraw_r variant is used for the threaded job model (D-24)"
+    license: ["CDDL-1.0", "LGPL-2.1-only"]
+    redistribution: "LGPL-2.1-only or CDDL-1.0: if distributed under LGPL-2.1, link dynamically, ship the license and allow replacement."
+    maintenance: "maintained; distribution package built 2026-07-16"
+    affects: ["RAW decode probe (S1-6.6, M0-E5)"]
+
+  - id: git
+    name: "Git"
+    category: build_tool
+    usage: build_time
+    lookups: [find_package:Git]
+    source: {type: system_package, package: git, repository: cachyos-extra-v3, upstream: "https://git-scm.com/"}
+    version: "2.56.0-1.1"
+    checksum: sha256:5939c83c99c085cd3297243b28f063a73b783fcbd0c6a65f8080d4bf5e472791
+    build_options: "Distribution build"
+    license: ["GPL-2.0-only"]
+    redistribution: "Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-09-30"
+    affects: ["revision stamp in Version.h (cmake/GenerateVersion.cmake)"]
+
+  - id: gcc
+    name: "GCC (primary compiler)"
+    category: toolchain
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: gcc, repository: cachyos-v3, upstream: "https://gcc.gnu.org"}
+    version: "16.2.1+r23+gd564253eb6c8-1"
+    checksum: sha256:ebac12ceef494c616a36fc6f0f792b365dc59b6ed46ca1a69f138aecc810b6ab
+    build_options: "Distribution build; used by the dev-debug, dev-release and ci presets"
+    license: ["GPL-3.0-or-later WITH GCC-exception-3.1", "GFDL-1.3-or-later"]
+    redistribution: "Compiler output is not encumbered (GCC Runtime Library Exception). Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-08-12"
+    affects: ["all GCC presets (D-02)"]
+
+  - id: libstdc++
+    name: "GNU C++ standard library"
+    category: runtime_component
+    usage: linked
+    lookups: []
+    source: {type: system_package, package: libstdc++, repository: cachyos-v3, upstream: "https://gcc.gnu.org"}
+    version: "16.2.1+r23+gd564253eb6c8-1"
+    checksum: sha256:9e5a736001eafa74985e0042e7e93f8e1852580f4f7cdf8806310d86a748fe19
+    build_options: "Distribution build matching gcc"
+    license: ["GPL-3.0-or-later WITH GCC-exception-3.1", "GFDL-1.3-or-later"]
+    redistribution: "Redistributable under the GCC Runtime Library Exception; normally a system component on Linux."
+    maintenance: "maintained; distribution package built 2026-08-12"
+    affects: ["every C++ target (D-02)"]
+
+  - id: clang
+    name: "Clang, clang-format and clang-tidy"
+    category: toolchain
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: clang, repository: cachyos-extra-v3, upstream: "https://clang.llvm.org/"}
+    version: "23.1.1-1.1"
+    checksum: sha256:19d48ca962de9aafc63667b171c640a8e7d1e34bf5516eb7b77be5bcbea69f6f
+    build_options: "Distribution build; used by the asan-ubsan, tsan and fuzz presets and for formatting and static analysis"
+    license: ["Apache-2.0 WITH LLVM-exception"]
+    redistribution: "Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-10-01"
+    affects: ["sanitizer and fuzz presets (D-02, D-03)", "code formatting and clang-tidy (D-23)"]
+
+  - id: compiler-rt
+    name: "LLVM compiler-rt (sanitizer and libFuzzer runtimes)"
+    category: toolchain
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: compiler-rt, repository: cachyos-extra-v3, upstream: "https://compiler-rt.llvm.org/"}
+    version: "23.1.1-1.1"
+    checksum: sha256:f6afa60ea1723dc526b5ad83e8817de972e385ee5456471b8e1da27f176f02a4
+    build_options: "Distribution build"
+    license: ["Apache-2.0 WITH LLVM-exception"]
+    redistribution: "Linked only into sanitizer and fuzz builds, which are not distributed."
+    maintenance: "maintained; distribution package built 2026-10-01"
+    affects: ["asan-ubsan, tsan and fuzz presets (D-03)"]
+
+  - id: cmake
+    name: "CMake"
+    category: build_tool
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: cmake, repository: cachyos-extra-v3, upstream: "https://www.cmake.org/"}
+    version: "4.4.4-1.1"
+    checksum: sha256:0a2588578d6657f49f24a9d78575254988be72043cd3fcaa2f0ebe9bebcd0c7f
+    build_options: "Distribution build; CMakePresets.json schema version 8 needs CMake 3.28 or newer (D-03)"
+    license: ["BSD-3-Clause"]
+    redistribution: "Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-10-02"
+    affects: ["build system (D-03)"]
+
+  - id: ninja
+    name: "Ninja"
+    category: build_tool
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: ninja, repository: cachyos-extra-v3, upstream: "https://ninja-build.org/"}
+    version: "1.13.2-3.1"
+    checksum: sha256:1b7f417b3275e6d53595c1413dca9a92212918f990484377444594fb3af772d4
+    build_options: "Distribution build"
+    license: ["Apache-2.0"]
+    redistribution: "Build-time tool only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-02-17"
+    affects: ["build system (D-03)"]
+
+  - id: python
+    name: "Python"
+    category: development_tool
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: python, repository: cachyos-v3, upstream: "https://www.python.org/"}
+    version: "3.14.7-2"
+    checksum: sha256:0e9a5d3e712ce85578a6eb452c74b0df898c2bb71b780a2b42f432a617e98043
+    build_options: "Distribution build; scripts run with python3 -I"
+    license: ["PSF-2.0"]
+    redistribution: "Scripts and checks only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-08-14"
+    affects: ["feature ledger report (scripts/parity_report.py)", "manifest test (tests/docs/manifest_test.py)"]
+
+  - id: python-yaml
+    name: "PyYAML"
+    category: development_tool
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: python-yaml, repository: cachyos-extra-v3, upstream: "https://github.com/yaml/pyyaml"}
+    version: "6.0.3-2.1"
+    checksum: sha256:6d024b3bb28fa15ecae25abca2cd37423a31af1c1adb697ab7ee2caac60e98d3
+    build_options: "Distribution build"
+    license: ["MIT"]
+    redistribution: "Scripts and checks only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-01-10"
+    affects: ["YAML parsing in the ledger and manifest checks"]
+
+  - id: qt6-wayland
+    name: "Qt Wayland compositor module"
+    category: library
+    usage: not_used
+    lookups: []
+    source: {type: system_package, package: qt6-wayland, repository: cachyos-extra-v3, upstream: "https://www.qt.io"}
+    version: "6.12.0-1.1"
+    checksum: sha256:6660231e3557fe41407ec7ef9bb5362db0ba4e694d1744113ad6d804dcfcb7f3
+    build_options: "Distribution build"
+    license: ["GPL-3.0-only", "LGPL-3.0-only", "LicenseRef-Qt-Commercial", "Qt-GPL-exception-1.0"]
+    redistribution: "Not used, not distributed."
+    maintenance: "maintained; distribution package built 2026-10-07"
+    affects: []
+    notes: "Installed in S1-0.1 as the plan required, but ArchMage does not need it: the client-side Wayland platform plugin and the Qt6WaylandClient CMake package ship in qt6-base (pacman -Qo /usr/lib/qt6/plugins/platforms/libqwayland.so: qt6-base 6.12.0-2.1). This package installs the Qt6WaylandCompositor libraries (pacman -Ql qt6-wayland). Candidate for removal from the prerequisites."
