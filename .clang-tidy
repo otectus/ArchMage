@@ -1,0 +1,12 @@
+# D-23: bugprone, performance and modernize subsets. Advisory in Stage 1 (plan §5.3).
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  performance-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -modernize-use-nodiscard
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*/(apps|core|io|ui|tests|benchmarks|fuzz)/.*'
+FormatStyle: file

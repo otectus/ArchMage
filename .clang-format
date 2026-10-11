@@ -1,0 +1,9 @@
+# D-23: LLVM base style, 4-space indent, 110 columns.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++20
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 110
+...

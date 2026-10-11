@@ -1,0 +1,20 @@
+# Build trees (one per CMake preset, D-03) and tool caches
+/build/
+/.cache/
+CMakeUserPresets.json
+/compile_commands.json
+
+# IDE and editor state
+*.user
+.idea/
+.vscode/
+
+# Python bytecode from scripts/ and tests/docs/
+__pycache__/
+*.pyc
+
+# Recovery workspaces and temporary saves left by local runs (D-14, S1-4.5)
+*.recovery
+*.recovery-wal
+*.recovery-shm
+*.archmage.tmp-*
