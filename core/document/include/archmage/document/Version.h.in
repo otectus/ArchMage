@@ -1,0 +1,27 @@
+// Product version and source revision.
+//
+// Rendered into the build tree by cmake/GenerateVersion.cmake from
+// core/document/include/archmage/document/Version.h.in; edit the template, not the output.
+//
+// Ownership and thread safety: compile-time constants and a pure function; safe from any thread.
+#pragma once
+
+#include <string>
+#include <string_view>
+
+namespace archmage::document {
+
+inline constexpr std::string_view kProductName = "ArchMage";
+inline constexpr int kVersionMajor = @ARCHMAGE_VERSION_MAJOR@;
+inline constexpr int kVersionMinor = @ARCHMAGE_VERSION_MINOR@;
+inline constexpr int kVersionPatch = @ARCHMAGE_VERSION_PATCH@;
+inline constexpr std::string_view kVersion = "@ARCHMAGE_VERSION@";
+
+/// Abbreviated commit the build came from, suffixed "-dirty" when tracked files were modified,
+/// or "unknown" when built outside a git checkout.
+inline constexpr std::string_view kGitRevision = "@ARCHMAGE_GIT_REVISION@";
+
+/// "ArchMage <version> (<revision>)", as printed by `archmage-cli --version`.
+[[nodiscard]] std::string versionBanner();
+
+} // namespace archmage::document
