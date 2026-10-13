@@ -162,6 +162,15 @@ archmage_add_test(BrushSliceTest
     LINKS archmage_ui
     QT)
 
+# Shell (S1-7): regions, documents, layers, colors, navigation and keyboard access, all offscreen.
+foreach(shell_test IN ITEMS ShellTest LayersPanelTest NavigationTest ColorPanelTest)
+    archmage_add_test(${shell_test}
+        SOURCES ui/${shell_test}.cpp ui/ShellTestSupport.h
+        LABELS ui
+        LINKS archmage_ui
+        QT)
+endforeach()
+
 # CLI subprocess check: archmage-cli --version exits 0 and prints the version banner.
 add_test(NAME cli.version
     COMMAND "${CMAKE_COMMAND}"
