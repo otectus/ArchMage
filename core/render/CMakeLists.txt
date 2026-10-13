@@ -6,6 +6,7 @@ archmage_add_module(render
         src/Kernels.cpp
         src/Graph.cpp
         src/CpuEvaluator.cpp
+        src/Blur.cpp
     PUBLIC_LINKS
         archmage_base
         archmage_tiles
@@ -13,3 +14,5 @@ archmage_add_module(render
         archmage_document
     PRIVATE_LINKS
         PkgConfig::xxHash)
+
+add_subdirectory(gpu)

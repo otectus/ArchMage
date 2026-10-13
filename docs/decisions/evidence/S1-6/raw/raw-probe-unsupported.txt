@@ -1,0 +1,3 @@
+file: layered-gimp-3.2.6.psd, 117738 bytes, sha256 acc09c066c9d12619a236ea487787bf9e99628576b431df5fda30aca7b46d8c0
+LibRaw 0.22.2-Release
+error: unsupported_input/raw.unsupported: This file is not a camera RAW file ArchMage can read (Unsupported file format or not RAW file)

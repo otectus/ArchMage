@@ -15,7 +15,17 @@ recorded: 2026-10-11
 platform: "CachyOS (Arch Linux), x86_64; running kernel 7.2.7 with 7.2.9 installed (reboot pending); reference profile A (plan §7.2)"
 fonts: []      # none bundled (ADR-0025)
 brushes: []    # none bundled
-fixtures: []   # none yet; planned fixtures and their licenses: docs/testing/corpus-plan.md
+fixtures:      # third-party fixtures; project-owned ones are registered in docs/testing/corpus-plan.md
+  - id: rawpixls-canon-powershot-a410-chdk
+    name: "raw.pixls.us sample: Canon PowerShot A410, 10-bit CHDK 1.5.0 DNG (4:3)"
+    source: "https://raw.pixls.us/getfile.php/1327/nice/Canon%20-%20Canon%20PowerShot%20A410%20-%2010bit%2010bit%20CHDK%20ver.%201.5.0%20(4:3).DNG"
+    checksum: sha256:f0d2fe47507fadf50008bddbc6bd2c5e39fddbe90cca6bca72dd360fa0e0eb38
+    size_bytes: 4219200
+    license: ["CC0-1.0"]
+    license_evidence: "The raw.pixls.us repository table (json/getrepository.php?set=all) links this sample to https://creativecommons.org/publicdomain/zero/1.0/; the site's upload terms release submissions under CC0."
+    location: "corpus directory, ~/.local/share/archmage-dev/corpus/canon-powershot-a410-chdk-10bit.dng (not in the repository)"
+    retrieved: 2026-10-13
+    affects: ["RAW decode probe (S1-6.6, M0-E5)", "docs/decisions/evidence/S1-6/raw/raw-probe-preview.png (derived, CC0)"]
 models: []     # no model weights in Stage 1
 services: []   # no optional services in Stage 1
 dependencies:
@@ -110,7 +120,7 @@ dependencies:
   - id: libpng
     name: "libpng"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:PNG]
     source: {type: system_package, package: libpng, repository: cachyos-extra-v3, upstream: "http://www.libpng.org/pub/png/libpng.html"}
     version: "1.6.59-1.1"
@@ -152,7 +162,7 @@ dependencies:
   - id: vulkan-headers
     name: "Vulkan headers"
     category: header_only_library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:Vulkan]
     source: {type: system_package, package: vulkan-headers, repository: extra, upstream: "https://www.vulkan.org/"}
     version: "1:1.4.363.0-1"
@@ -167,7 +177,7 @@ dependencies:
   - id: vulkan-icd-loader
     name: "Vulkan loader"
     category: runtime_component
-    usage: found_not_linked
+    usage: linked
     lookups: []
     source: {type: system_package, package: vulkan-icd-loader, repository: cachyos-extra-v3, upstream: "https://www.vulkan.org/"}
     version: "1.4.363.0-1.1"
@@ -211,7 +221,7 @@ dependencies:
   - id: nlohmann-json
     name: "nlohmann/json"
     category: header_only_library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:nlohmann_json]
     source: {type: system_package, package: nlohmann-json, repository: extra, upstream: "https://github.com/nlohmann/json"}
     version: "3.12.0-2"
@@ -310,7 +320,7 @@ dependencies:
   - id: harfbuzz
     name: "HarfBuzz"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [pkg_config:harfbuzz]
     source: {type: system_package, package: harfbuzz, repository: cachyos-extra-v3, upstream: "https://harfbuzz.github.io/"}
     version: "14.6.0-1.1"
@@ -324,7 +334,7 @@ dependencies:
   - id: freetype2
     name: "FreeType"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [pkg_config:freetype2]
     source: {type: system_package, package: freetype2, repository: cachyos-extra-v3, upstream: "https://www.freetype.org/"}
     version: "2.14.3-1.2"
@@ -338,7 +348,7 @@ dependencies:
   - id: libraw
     name: "LibRaw (thread-safe libraw_r)"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [pkg_config:libraw_r]
     source: {type: system_package, package: libraw, repository: cachyos-extra-v3, upstream: "https://www.libraw.org/"}
     version: "0.22.2-1.1"
@@ -446,6 +456,20 @@ dependencies:
     redistribution: "Build-time tool only; not distributed with ArchMage."
     maintenance: "maintained; distribution package built 2026-02-17"
     affects: ["build system (D-03)"]
+
+  - id: noto-fonts
+    name: "Noto fonts (Noto Sans Arabic, Noto Sans Devanagari)"
+    category: font
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: noto-fonts, repository: extra, upstream: "https://fonts.google.com/noto"}
+    version: "1:2026.10.01-1"
+    checksum: sha256:3cf6de13b1f3600ed782ff5e22eb6b3827fcc0ab5ee407bc0b121239fe19d949
+    build_options: "Distribution package; read from /usr/share/fonts/noto at run time, never bundled"
+    license: ["OFL-1.1-no-RFN"]
+    redistribution: "Not distributed with ArchMage. Bundling would need the OFL notice and the reserved-font-name rules."
+    maintenance: "maintained; distribution package built 2026-10-01"
+    affects: ["text shaping probe (S1-6.7, benchmarks/probes/text_probe.cpp)", "docs/decisions/evidence/S1-6/text/text-probe.png (rendered glyphs)"]
 
   - id: python
     name: "Python"

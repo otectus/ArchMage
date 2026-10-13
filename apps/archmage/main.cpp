@@ -3,6 +3,8 @@
 // `--experiment=canvas:<raster|rhi|vulkan>` runs the S1-1 canvas adapter experiment (plan S1-1.2) instead
 // of the application: optional `--script=<step,step,...>`, `--evidence-dir=<path>` and `--snap-wait=<ms>`.
 // `--benchmark=brush-latency [--seconds=<s>] [--canvas=<pixels>]` runs the S1-3.7 brush latency benchmark.
+// `--benchmark=launch` starts the application normally, prints "EVIDENCE launch <json>" once the main window
+// has painted and the event loop has turned once (a usable workspace, spec §25.2), and exits (S1-6.8).
 
 #include "archmage/document/Version.h"
 #include "archmage/ui/MainWindow.h"
@@ -11,7 +13,11 @@
 #include "archmage/ui/experiments/CanvasExperiment.h"
 
 #include <QApplication>
+#include <QElapsedTimer>
+#include <QEvent>
+#include <QGuiApplication>
 #include <QString>
+#include <QTimer>
 
 #include <cstdio>
 #include <cstring>
@@ -110,6 +116,16 @@ int main(int argc, char *argv[]) {
         return archmage::ui::experiments::runCanvasExperiment(app, *experiment);
     }
 
+    const bool launchBenchmark = [&] {
+        for (int i = 1; i < argc; ++i) {
+            if (std::string_view(argv[i]) == "--benchmark=launch") {
+                return true;
+            }
+        }
+        return false;
+    }();
+    QElapsedTimer sinceMain;
+    sinceMain.start();
     QApplication app(argc, argv);
     QApplication::setApplicationName(QStringLiteral("ArchMage"));
     QApplication::setApplicationVersion(version);
@@ -117,6 +133,32 @@ int main(int argc, char *argv[]) {
     QApplication::setDesktopFileName(QStringLiteral("archmage"));
 
     archmage::ui::MainWindow window;
+    if (launchBenchmark) {
+        // Ready: the first paint of the window, then one turn of the event loop for the remaining paints.
+        struct FirstPaint final : QObject {
+            QWidget *window = nullptr;
+            QElapsedTimer *clock = nullptr;
+            bool seen = false;
+            bool eventFilter(QObject *object, QEvent *event) override {
+                auto *widget = qobject_cast<QWidget *>(object);
+                if (!seen && event->type() == QEvent::Paint && widget != nullptr && widget->window() == window) {
+                    seen = true;
+                    QTimer::singleShot(0, [clock = clock] {
+                        std::printf("EVIDENCE launch {\"ready_ms_since_main\":%lld,\"platform\":\"%s\"}\n",
+                                    static_cast<long long>(clock->elapsed()),
+                                    QGuiApplication::platformName().toUtf8().constData());
+                        std::fflush(stdout);
+                        QApplication::quit();
+                    });
+                }
+                return false;
+            }
+        };
+        static FirstPaint watcher;
+        watcher.window = &window;
+        watcher.clock = &sinceMain;
+        app.installEventFilter(&watcher);
+    }
     window.show();
     return QApplication::exec();
 }

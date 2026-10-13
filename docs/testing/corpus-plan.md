@@ -63,4 +63,5 @@ One row per file in the corpus directory, added when the file is created or down
 
 | File | SHA-256 | Size | Source and command | License | Added |
 | --- | --- | --- | --- | --- | --- |
-| none yet | | | | | |
+| `layered-gimp-3.2.6.psd` | `acc09c066c9d12619a236ea487787bf9e99628576b431df5fda30aca7b46d8c0` | 117,738 bytes | Authored with GIMP 3.2.6 (`gimp 3.2.6-2.1`): `ARCHMAGE_PSD_OUT=<corpus>/layered-gimp-3.2.6.psd gimp-console-3.2 -i --quit --batch-interpreter=python-fu-eval -b "exec(open('benchmarks/probes/fixtures/make_psd_fixture.py').read())"` | Project-owned (authored here) | 2026-10-13 |
+| `canon-powershot-a410-chdk-10bit.dng` | `f0d2fe47507fadf50008bddbc6bd2c5e39fddbe90cca6bca72dd360fa0e0eb38` | 4,219,200 bytes | raw.pixls.us sample 1327, "Canon - Canon PowerShot A410 - 10bit 10bit CHDK ver. 1.5.0 (4:3).DNG" (camera Canon PowerShot A410, CHDK 1.5.0; sample dated 2017-04-09): `curl -o <corpus>/canon-powershot-a410-chdk-10bit.dng 'https://raw.pixls.us/getfile.php/1327/nice/Canon%20-%20Canon%20PowerShot%20A410%20-%2010bit%2010bit%20CHDK%20ver.%201.5.0%20(4:3).DNG'`; checksum matches the site's | CC0 1.0 (the site's repository table links this sample to CC0; also in `docs/dependencies/manifest.yaml` `fixtures`) | 2026-10-13 |

@@ -54,15 +54,15 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | M0-D1 Clean project initialization | Done in S1-0 | Commit `0cdf8ce` on `main` |
 | M0-D2 Toolchain and license manifest | Done in S1-0 | `docs/dependencies/manifest.yaml` |
 | M0-D3 Feature ledger | Infrastructure done in S1-0; Stage 1 child entries due in S1-9 | `docs/parity/features.yaml`, `docs/parity/report.md` |
-| M0-D4 Architecture decisions | Recorded in S1-0; D-11 provisional until G1 | `docs/decisions/ADR-0001` to `ADR-0030` |
+| M0-D4 Architecture decisions | Recorded in S1-0; D-11 settled at G1; evidence added in S1-6 (ADR-0009, ADR-0010, ADR-0012); implementation decisions ADR-0101 to ADR-0104 | `docs/decisions/` |
 | M0-D5 Canvas and input prototype | Done in S1-1 | Three `CanvasSurface` adapters, `InputMapper`, `ViewTransform`; ADR-0011 |
-| M0-D6 Memory and format experiments | Partly done: tile memory accounting and eviction ordering in S1-2; the `.archmage` container in S1-4; probes pending (S1-6) | `TilesTest` (uniform tiles allocate nothing, dense tiles charge RAM, coordinator eviction order); `docs/architecture/native-format.md`, `NativeFormatTest` |
+| M0-D6 Memory and format experiments | Done: tile memory accounting and eviction ordering in S1-2; the `.archmage` container in S1-4; spooling in S1-5; PSD, RAW and text probes in S1-6 | `TilesTest`; `docs/architecture/native-format.md`, `NativeFormatTest`; `RecoverySpool` test; `docs/decisions/evidence/S1-6/` |
 | M0-D7 Test corpus plan | Done in S1-0 | `docs/testing/corpus-plan.md` |
 | M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Done in S1-1, tablet unavailable | ADR-0011 evidence matrix; `docs/decisions/evidence/S1-1/` |
-| M0-E2 Tile compositing, blur halo, profile conversion, brush latency | CPU tile compositing (S1-2) and brush latency (S1-3, synthetic input) done; blur halo and profile conversion experiment pending (S1-6) | `EvaluatorTest`, `KernelsTest`, `benchmarks/results/2026-10-13-brush.json` |
+| M0-E2 Tile compositing, blur halo, profile conversion, brush latency | Done: CPU compositing (S1-2), brush latency (S1-3, synthetic input), GPU compositing equal to the CPU, blur halo without seams, profile conversion (S1-6) | `EvaluatorTest`, `KernelsTest`, `GpuTest`, `BlurTest`, `ColorExperimentTest`; `benchmarks/results/2026-10-13-brush.json`; `docs/decisions/evidence/S1-6/color.md`; ADR-0012 |
 | M0-E3 Native save, reopen, kill-during-save recovery | Done: save and reopen in S1-4; kill during save and journal, and recovery, in S1-5 | `At001Test`, `KillDuringSaveTest` (AT-013), `RecoveryTest` |
-| M0-E4 Layered PSD decode probe | Not started (S1-6) | |
-| M0-E5 RAW file, shaped Arabic and Indic text, macOS GPU path | Not started (S1-6) | |
+| M0-E4 Layered PSD decode probe | Done in S1-6: one GIMP-written fixture; 2 of 7 records rendered, 13 unsupported records listed | `docs/decisions/evidence/S1-6/psd.md` |
+| M0-E5 RAW file, shaped Arabic and Indic text, macOS GPU path | RAW and text done in S1-6; macOS GPU path unavailable (no Apple machine), with reproduction instructions below | `docs/decisions/evidence/S1-6/raw.md`, `text.md`; "Unavailable platforms and devices" below |
 | M0-E6 Resource estimates on profiles A to D | Not started (S1-6) | |
 
 ## Known gaps (spec §29.2, plan §5.5)
@@ -75,6 +75,52 @@ real-cursor alignment (S1-1 used headless outputs and synthetic events, ADR-0011
 saving on vfat, exfat and network filesystems (the backup fallback is tested by overriding the detected
 filesystem, not on such a mount); refusing a network filesystem for the recovery workspace (tested only
 through the filesystem type table); power loss (interruptions are simulated with `_exit` at fault points).
+
+## Unavailable platforms and devices (spec §29.2)
+
+What could not be tested, with what would be run. Nothing here is claimed to work.
+
+### macOS GPU path (M0-E5, plan S1-6.9)
+
+Unavailable: no Apple machine exists here, and Stage 1 builds for Linux only (ADR-0021). The code has these
+gaps that a Mac would hit first; all four need closing before the steps below can succeed:
+
+1. `core/render/gpu/src/GpuContext.cpp` does not enable `VK_KHR_portability_enumeration` or set
+   `VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR`. Current Vulkan loaders do not report portability
+   drivers such as MoltenVK without both, so creation fails with `gpu.unavailable` and every GPU test skips.
+   The device must also enable `VK_KHR_portability_subset` whenever the device lists it.
+2. `io/native/src/Platform.cpp` has only stubs off Linux, so saving fails with `provider_unavailable`.
+3. `core/base/src/Random.cpp` falls back to `std::random_device`; use `arc4random_buf` before identifiers are
+   generated on macOS (D-16).
+4. `core/tiles/src/ResourceCoordinator.cpp` assumes 16 GiB of RAM off Linux; use `sysctl hw.memsize`.
+
+What would be run on an Apple Silicon Mac. These steps are untested, including the Homebrew package names and
+the compiler choice (Apple Clang has not been tried):
+
+```
+xcode-select --install
+brew install cmake ninja llvm qt sqlite zstd openssl@3 little-cms2 libpng jpeg-turbo harfbuzz freetype \
+    libraw xxhash nlohmann-json cli11 fmt spdlog googletest python \
+    vulkan-headers vulkan-loader molten-vk glslang vulkan-validationlayers
+cmake -S . -B build/macos -G Ninja -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_CXX_COMPILER="$(brew --prefix llvm)/bin/clang++" -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix)"
+cmake --build build/macos --target GpuTest bench_main
+export VK_ICD_FILENAMES="$(brew --prefix molten-vk)/etc/vulkan/icd.d/MoltenVK_icd.json"
+ctest --test-dir build/macos -R Gpu --output-on-failure
+QT_QPA_PLATFORM=offscreen build/macos/benchmarks/bench_main --profile D
+```
+
+Evidence to collect:
+- `GpuTest` passing: composites equal to the CPU's, and no validation errors;
+- the `composite_gpu` entry of the `bench_main` output;
+- macOS and Xcode versions, the MoltenVK version, and the GPU core count and unified memory size (spec §25.1).
+
+### Reference profiles B and D (M0-E6, plan S1-6.8)
+
+Unavailable: there is no 16 GiB machine with only integrated graphics (B) and no Apple Silicon machine (D).
+`benchmarks/results/2026-10-13-bench-B.json` and `-D.json` record this, with the commands to run on such
+machines: `cmake --preset dev-release && cmake --build --preset dev-release`, then
+`python3 -I scripts/bench_record.py --profile B` (or `D`, after the macOS gaps above are closed).
 
 ## S1-0 Bootstrap and scaffolding: complete, 2026-10-11
 

@@ -30,6 +30,17 @@ public:
     /// The built-in sRGB profile (Little CMS cmsCreate_sRGBProfile, creation date fixed at 2026-10-11).
     [[nodiscard]] static std::shared_ptr<const ColorProfile> srgb();
 
+    /// CIE xy chromaticity.
+    struct Chromaticity {
+        double x = 0.0;
+        double y = 0.0;
+    };
+    /// A matrix/TRC RGB profile from primaries, white point and a pure gamma transfer curve, built with
+    /// Little CMS (creation date fixed, so the bytes are reproducible).
+    [[nodiscard]] static base::Result<std::shared_ptr<const ColorProfile>>
+    fromPrimaries(const std::string &description, Chromaticity white, Chromaticity red, Chromaticity green,
+                  Chromaticity blue, double gamma);
+
     [[nodiscard]] const std::vector<std::byte> &iccBytes() const { return bytes_; }
     [[nodiscard]] const base::Sha256Digest &hash() const { return hash_; }
     [[nodiscard]] const std::string &description() const { return description_; }

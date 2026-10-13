@@ -1,0 +1,57 @@
+file: layered-gimp-3.2.6.psd
+size: 117738 bytes, sha256 acc09c066c9d12619a236ea487787bf9e99628576b431df5fda30aca7b46d8c0
+header: 8BPS version 1, 512 x 384, 3 channels, 8 bits, RGB
+color mode data: 0 bytes
+image resources: 3582 bytes
+  resource 1005 (resolution), 16 bytes
+  resource 1024 (layer state), 2 bytes
+  resource 1069 (layer selection IDs), 6 bytes
+  resource 1039 (ICC profile), 672 bytes
+  resource 1058 (EXIF 1), 2826 bytes
+layers: 7
+  layer 0: 'Background' rect (0, 0)-(512, 384), 4 channels, blend norm (normal), opacity 255, clipping 0, flags 0x00, mask 0 bytes
+    layer 0 block 'luni' (8BIM), 24 bytes
+    layer 0 block 'lyid' (8BIM), 4 bytes
+    layer 0 block 'lclr' (8BIM), 8 bytes -> unsupported
+  layer 1: 'Red disc (multiply)' rect (0, 0)-(512, 384), 4 channels, blend mul  (multiply), opacity 255, clipping 0, flags 0x00, mask 0 bytes
+    layer 1 block 'luni' (8BIM), 44 bytes
+    layer 1 block 'lyid' (8BIM), 4 bytes
+    layer 1 block 'lclr' (8BIM), 8 bytes -> unsupported
+  layer 2: 'Green bar (screen 70%)' rect (0, 0)-(512, 384), 4 channels, blend scrn (screen), opacity 179, clipping 0, flags 0x00, mask 0 bytes
+    layer 2 block 'luni' (8BIM), 48 bytes
+    layer 2 block 'lyid' (8BIM), 4 bytes
+    layer 2 block 'lclr' (8BIM), 8 bytes -> unsupported
+  layer 3: 'Orange with mask' rect (0, 0)-(512, 384), 5 channels, blend norm (normal), opacity 255, clipping 0, flags 0x00, mask 20 bytes
+    layer 3 block 'luni' (8BIM), 36 bytes
+    layer 3 block 'lyid' (8BIM), 4 bytes
+    layer 3 block 'lclr' (8BIM), 8 bytes -> unsupported
+  layer 4: '</Layer group>' rect (0, 0)-(0, 0), 4 channels, blend norm (normal), opacity 255, clipping 0, flags 0x18, mask 0 bytes
+    layer 4 block 'luni' (8BIM), 32 bytes
+    layer 4 block 'lyid' (8BIM), 4 bytes
+    layer 4 block 'lclr' (8BIM), 8 bytes -> unsupported
+    layer 4 block 'lsct' (8BIM), 12 bytes
+  layer 5: 'Blue square (in group)' rect (0, 0)-(512, 384), 4 channels, blend norm (normal), opacity 255, clipping 0, flags 0x00, mask 0 bytes
+    layer 5 block 'luni' (8BIM), 48 bytes
+    layer 5 block 'lyid' (8BIM), 4 bytes
+    layer 5 block 'lclr' (8BIM), 8 bytes -> unsupported
+  layer 6: 'Group' rect (0, 0)-(0, 0), 4 channels, blend norm (normal), opacity 255, clipping 0, flags 0x18, mask 0 bytes
+    layer 6 block 'luni' (8BIM), 16 bytes
+    layer 6 block 'lyid' (8BIM), 4 bytes
+    layer 6 block 'lclr' (8BIM), 8 bytes -> unsupported
+    layer 6 block 'lsct' (8BIM), 12 bytes
+rendered by the CPU compositor: 2 of 7 layer records
+unsupported records: 13
+  unsupported: embedded ICC profile (resource 1039): the probe renders as sRGB
+  unsupported: layer 0: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 1: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 2: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 3: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 4: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 5: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 6: additional information 'lclr' (8 bytes) is not interpreted
+  unsupported: layer 1 'Red disc (multiply)': blend mode multiply (Stage 1 renders normal only); not rendered
+  unsupported: layer 2 'Green bar (screen 70%)': blend mode screen (Stage 1 renders normal only); not rendered
+  unsupported: layer 3 'Orange with mask': layer mask (M2); not rendered
+  unsupported: layer 4 '</Layer group>': group marker (end, blend normal): groups are flattened
+  unsupported: layer 6 'Group': group marker (start, blend normal): groups are flattened
+merged composite written to merged.png

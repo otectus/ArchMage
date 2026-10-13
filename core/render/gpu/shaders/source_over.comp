@@ -1,0 +1,43 @@
+#version 450
+// Source-over of a stack of layers for a batch of 128 × 128 tiles (D-12, ADR-0012; spec §7.4, §7.5).
+//
+// Each invocation composites one pixel of one tile, bottom to top, with the CPU reference's arithmetic in
+// the same order (render/Kernels.cpp premultiplyOverRow and sourceOver). `precise` forbids fused
+// multiply-add and reassociation, so with IEEE-rounded add and multiply the result matches the CPU bit for
+// bit.
+//
+// Buffers:
+//   samples  straight RGBA per pixel, 16,384 entries per (tile, layer) block
+//   entries  per tile i: entries[i] = (first entry index, entry count, 0, 0); per entry:
+//            (index of the block's first sample, float bits of the layer's coverage, 0, 0)
+//   result   premultiplied RGBA, 16,384 per tile
+
+layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Samples { vec4 samples[]; };
+layout(std430, binding = 1) readonly buffer Entries { uvec4 entries[]; };
+layout(std430, binding = 2) writeonly buffer Result { vec4 result[]; };
+
+const uint kTilePixels = 128u * 128u;
+
+float sanitized(float v) { return (isnan(v) || isinf(v)) ? 0.0 : v; }
+
+void main() {
+    const uint tile = gl_GlobalInvocationID.z;
+    const uint pixel = gl_GlobalInvocationID.y * 128u + gl_GlobalInvocationID.x;
+    const uvec4 header = entries[tile];
+    precise vec4 dst = vec4(0.0);
+    for (uint i = 0u; i < header.y; ++i) {
+        const uvec4 entry = entries[header.x + i];
+        const vec4 s = samples[entry.x + pixel];
+        const float coverage = uintBitsToFloat(entry.y);
+        precise float alpha = clamp(sanitized(s.a), 0.0, 1.0) * coverage;
+        if (alpha == 0.0) {
+            continue;
+        }
+        precise vec4 src = vec4(sanitized(s.r) * alpha, sanitized(s.g) * alpha, sanitized(s.b) * alpha, alpha);
+        precise float k = 1.0 - src.a;
+        dst = src + dst * k;
+    }
+    result[tile * kTilePixels + pixel] = dst;
+}
