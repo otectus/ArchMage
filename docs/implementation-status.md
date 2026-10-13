@@ -9,9 +9,10 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0 (see below). Next: S1-1, presentation and input feasibility (gate G1).
-- Before starting S1-1, reboot (I-06), then re-run the G0 checks: `scripts/check.sh`,
-  `scripts/check-ui.sh`, `scripts/check-sanitizers.sh`.
+- Completed: S1-0 and S1-1 (see below). Next: S1-2, core foundation (gate G2).
+- Before starting S1-2, re-run the G1 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+  `scripts/check-sanitizers.sh`. I-01 (C++20 versus `std::expected`) must be settled at the start of S1-2.
+- Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
 ## Open questions (plan §6.3)
 
@@ -38,7 +39,12 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | I-03 | `noto-fonts` already provides Noto Sans Devanagari; plan Q-04's font installation is unnecessary | S1-0 | Nothing |
 | I-04 | The developer session exports `QT_QPA_PLATFORMTHEME=qt6ct`; on the offscreen platform it aborts Qt tests through GTK. Qt tests now unset it (`tests/CMakeLists.txt`) | S1-0 | Nothing |
 | I-05 | The pacman sync database dated 2026-09-25 pointed at package versions the mirrors had dropped (404 on at.cachyos.org, cachyos.doridian.net, us-mnz.soulharsh007.dev); `mirror.bali0531.hu` redirected to `cdn.cachyos.org`, which answered with an HTML "Welcome to our server" page that pacman cached in place of `cmake`, `qt6-wayland` and `vulkan-validation-layers` and their signatures, so every retry failed. Resolved by the user: stub files removed, then `pacman -Syu --needed <packages>` | S1-0 | Nothing; if pacman reports signature errors again, look for HTML files in `/var/cache/pacman/pkg` |
-| I-06 | That `-Syu` upgraded 352 packages: Clang 22.1.8 to 23.1.1, Qt 6.11.2 to 6.12.0, kernel 7.2.7 to 7.2.9 (still running 7.2.7). The loaded NVIDIA kernel module is 615.71.09 while `nvidia-utils` is 615.78.08 | S1-0 | Reboot before S1-1, whose Vulkan experiments need a matching NVIDIA driver; manifest pins already reflect the upgrade |
+| I-06 | That `-Syu` upgraded 352 packages: Clang 22.1.8 to 23.1.1, Qt 6.11.2 to 6.12.0, kernel 7.2.7 to 7.2.9 (still running 7.2.7). The loaded NVIDIA kernel module is 615.71.09 while `nvidia-utils` is 615.78.08 | S1-0 | Closed 2026-10-13: running kernel 7.2.9, NVIDIA module 615.78.08 matches `nvidia-utils` |
+| I-07 | QVulkanWindow's frame synchronization raises VUID-vkQueueSubmit-pSignalSemaphores-00067 on every frame with validation layers 1.4.363, and QVulkanWindow offers no swapchain color space selection (the NVIDIA Wayland driver lists `PASS_THROUGH` first) | S1-1 | An ArchMage-owned Vulkan swapchain before the Vulkan adapter becomes the default (ADR-0011); no later than M4 |
+| I-08 | Qt's QRhi Vulkan backend raises VUID-VkImageCreateInfo-initialLayout-12478 | S1-1 | Nothing while QRhiWidget stays experimental (ADR-0011) |
+| I-09 | Raster canvas repaints are not paced to the display: 747 frames for 746 input events in 3 s on a 60 Hz output | S1-1 | Pace canvas repaints with `QWindow::requestUpdate` when the real canvas lands (S1-3, S1-7) |
+| I-10 | Under XWayland the scale-1 tooltip probe was never shown (Qt reported it hidden), identically for all three surfaces; the scale-1.5 one was | S1-1 | Investigate with the real tooltips in S1-7 |
+| I-11 | Hyprland 0.56 window-rule handles can only be disabled, not removed; the experiment driver's rules stay registered, disabled, until the next config reload | S1-1 | Nothing; they match only the `archmage-experiment` class |
 
 ## M0 deliverables and experiments (plan §1.2)
 
@@ -48,10 +54,10 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | M0-D2 Toolchain and license manifest | Done in S1-0 | `docs/dependencies/manifest.yaml` |
 | M0-D3 Feature ledger | Infrastructure done in S1-0; Stage 1 child entries due in S1-9 | `docs/parity/features.yaml`, `docs/parity/report.md` |
 | M0-D4 Architecture decisions | Recorded in S1-0; D-11 provisional until G1 | `docs/decisions/ADR-0001` to `ADR-0030` |
-| M0-D5 Canvas and input prototype | Not started (S1-1) | |
+| M0-D5 Canvas and input prototype | Done in S1-1 | Three `CanvasSurface` adapters, `InputMapper`, `ViewTransform`; ADR-0011 |
 | M0-D6 Memory and format experiments | Not started (S1-2, S1-4, S1-6) | |
 | M0-D7 Test corpus plan | Done in S1-0 | `docs/testing/corpus-plan.md` |
-| M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Not started (S1-1) | |
+| M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Done in S1-1, tablet unavailable | ADR-0011 evidence matrix; `docs/decisions/evidence/S1-1/` |
 | M0-E2 Tile compositing, blur halo, profile conversion, brush latency | Not started (S1-2, S1-3, S1-6) | |
 | M0-E3 Native save, reopen, kill-during-save recovery | Not started (S1-4, S1-5) | |
 | M0-E4 Layered PSD decode probe | Not started (S1-6) | |
@@ -63,7 +69,8 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 Not verified in Stage 1, each to be closed or carried forward with reproduction instructions:
 Windows and macOS builds (ADR-0021); reference profiles B and D; real tablet input (no tablet on the
 development machine); HDR; display color accuracy (sRGB display assumed, ADR-0010); compositors other
-than Hyprland; accessibility beyond keyboard reachability.
+than Hyprland; accessibility beyond keyboard reachability; mixed DPI across physical monitors and
+real-cursor alignment (S1-1 used headless outputs and synthetic events, ADR-0011); GPU device loss.
 
 ## S1-0 Bootstrap and scaffolding: complete, 2026-10-11
 
@@ -156,6 +163,98 @@ over the six sources processes all of them with no findings in project code.
 - The manifest was generated once from pacman metadata by a script that is not in the repository;
   edit entries by hand and confirm with `python3 -I tests/docs/manifest_test.py --check-installed`.
 
-## S1-1 to S1-9
+## S1-1 Presentation and input feasibility: complete, 2026-10-13
+
+Work on branch `s1-1-canvas-feasibility` (`2658358`, `cc58562`, `9c05c1b`; `697291f` added the Stage 2
+plan), merged to `main` in `629c913`. The G0 checks passed on `5d32326` before work began (same day,
+after the I-06 reboot).
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-1.1 Canvas surfaces | Automatically tested (raster), manually tested by script (all three) | `ui/canvas/`: `RasterCanvasSurface`, `RhiCanvasSurface`, `VulkanCanvasSurface` behind `CanvasSurface`; each displays the synthetic tile grid. `CanvasSurfaceTest` checks the raster frame equals the source rendering. The matrix found every adapter's presented frame pixel-exact on Wayland and XWayland (ADR-0011) |
+| S1-1.2 Experiment harness | Manually tested by script | `archmage --experiment=canvas:<raster\|rhi\|vulkan>` with menus, docked and floating docks, tool bar, status bar, popup and tooltip probes; ran for each adapter under `wayland` and `xcb` (`docs/decisions/evidence/S1-1/<platform>-<kind>/log.txt`) |
+| S1-1.3 Evidence matrix | Done | ADR-0011 matrix; crops, frames, `result.json` and `summary.json` under `docs/decisions/evidence/S1-1/` |
+| S1-1.4 Input pipeline | Automatically tested | `ui/input/PointerSample.h`, `InputMapper`; `InputMapperTest` (10 cases: mouse, tablet pressure and tilt, eraser, wheel zoom, touchpad pan, Shift and Ctrl wheel, pinch). No tablet available (ADR-0011) |
+| S1-1.5 ViewTransform | Automatically tested | `core/render/ViewTransform`; `ViewTransformTest` 11 `[math]` cases: exact round trips at integer zoom, within 1e-9 over 100,000 random views |
+| S1-1.6 Latency instrumentation | Manually tested by script | `ARCHMAGE_TRACE=latency` prints `LATENCY` lines every second; synthetic 250 Hz drags measured for each adapter (ADR-0011 table) |
+| S1-1.7 Decision | Done | ADR-0011 accepted; plan D-11 points to it; `CanvasSurface::defaultKind()` implements it |
+
+### Exit gate G1
+
+Met: ADR-0011 names the adapter with its evidence matrix, the raster surface works as safe mode (and is
+the Stage 1 default), the input pipeline tests pass, and D-11 in the plan points to the ADR.
+
+### Commands and results (on the merged tree, 2026-10-13)
+
+| Command | Result |
+| --- | --- |
+| `scripts/check.sh` | exit 0; 15/15 non-UI tests; manifest "38 entries cover 21 CMake lookups"; ledger "121 entries; report up to date" |
+| `scripts/check-ui.sh` | exit 0; 3/3 (`SmokeTest`, `InputMapperTest`, `CanvasSurfaceTest`) |
+| `scripts/check-sanitizers.sh` | exit 0; 18/18 under Clang ASan and UBSan; 0 compiler warnings |
+| `cmake --preset ci && cmake --build --preset ci && ctest --preset ci` | 0 warnings with `-Werror`; 18/18 |
+| `python3 -I tests/docs/manifest_test.py --check-installed` | pinned versions match the installed packages |
+| `clang-format --dry-run --Werror` on the 27 new or changed C++ files | clean |
+| Clean clone of `2658358`: configure, build, `ctest --preset dev-debug` | 16/16 |
+| `python3 -I scripts/experiments/canvas_matrix.py` (all six runs), then `--platforms xcb` after fixing the X11 coordinate mapping | every presented frame pixel-exact; results in `docs/decisions/evidence/S1-1/summary.json`; user focus, cursor and outputs restored after each run |
+
+### Deviations from the plan
+
+1. Mixed DPI used two temporary headless Hyprland outputs (scale 1 and 1.5) instead of rescaling a
+   physical monitor, and windows moved between them rather than across the three physical monitors. This
+   left the user's displays untouched; physical mixed-DPI remains a known gap.
+2. Evidence screenshots are cropped to the experiment window; full captures (which show the user's bar
+   and wallpaper) are not kept.
+3. The synthetic drag runs at 250 Hz (a 4 ms timer), not 240 Hz.
+4. QRhiWidget was measured with its Vulkan backend; `ARCHMAGE_RHI_API=opengl` exists but was not measured.
+5. QRhi needs `Qt6::GuiPrivate`; `QT_NO_PRIVATE_MODULE_WARNING` silences Qt's configure reminder, and the
+   RHI path's validation uses Qt's private `QVulkanDefaultInstance` flag.
+6. `core/tiles/include/archmage/tiles/Geometry.h` arrived in S1-1 because `ViewTransform` needs it;
+   S1-2.2 adds checked arithmetic.
+7. `cmake/ArchMageShaders.cmake` compiles GLSL to SPIR-V headers at build time (S1-6 reuses it).
+8. The surfaces are named `RasterCanvasSurface`, `RhiCanvasSurface` and `VulkanCanvasSurface` (the plan
+   said `...WidgetSurface` and `VulkanWindowSurface`).
+9. Raster, not a GPU adapter, is the Stage 1 default (ADR-0011).
+10. Experiment windows use the application identity `archmage-experiment` so window rules can target them.
+
+### Progress report (plan §8.2)
+
+#### S1-1 Presentation and input feasibility, 2026-10-13
+
+- **Implemented outcomes:** three canvas presentation adapters behind one interface, with an
+  evidence-based default (raster); view transform with device, logical and document mappings; input
+  mapping for mouse, tablet, wheel and pinch; latency tracing; a scripted canvas experiment and an
+  automated Hyprland evidence driver.
+- **Changed modules:** `core/tiles` (geometry header), `core/render` (`ViewTransform`), `ui` (`canvas/`,
+  `input/`, `experiments/`, shaders), `apps/archmage` (`--experiment`), `cmake` (shader helper, Qt
+  GuiPrivate and ShaderTools components), `scripts/experiments`.
+- **Passing evidence (commands and result paths):** the table above; matrix results in
+  `docs/decisions/evidence/S1-1/`.
+- **Manual validation (what, how, platform):** the six adapter and platform combinations, scripted on
+  Hyprland 0.56.2 with headless outputs and checked against grim captures; no interactive session with a
+  person at the canvas yet.
+- **Performance changes (benchmark result file):** none in `benchmarks/results/` (benchmarks start in
+  S1-3.7). Event-to-submission latencies for each adapter are in ADR-0011.
+- **Migrations:** none.
+- **Dependency changes (manifest diff):** added `qt6-shadertools`, `grim`, `python-numpy`,
+  `python-pillow`, `hyprland` (33 to 38 entries); `find_package(Qt6)` also requests `GuiPrivate` and
+  `ShaderTools`.
+- **Open risks:** I-01 must be settled before S1-2; I-07 (QVulkanWindow synchronization and color space)
+  blocks making the Vulkan adapter the default; I-09 repaint pacing.
+- **State by behavior:** view transform and input mapping automatically tested; raster canvas
+  presentation automatically tested; all adapters manually tested by script on Wayland and XWayland;
+  nothing verified against a benchmark.
+- **Sample document:** none; samples start in S1-4.
+
+### Notes for the next session
+
+- Run experiments on the `dev-release` build: the Debug synthetic frame takes about 9 ms to render.
+- In the agent's zsh, `$var:...` applies history modifiers (`$g:set_enabled` became garbage); write
+  `${var}` before a colon.
+- The matrix takes about 5 minutes and briefly focuses experiment windows on headless outputs; it restores
+  the active workspace and cursor afterwards.
+
+## S1-2 to S1-9
 
 Not started.
