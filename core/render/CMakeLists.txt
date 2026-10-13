@@ -13,3 +13,5 @@ archmage_add_module(render
         archmage_document
     PRIVATE_LINKS
         PkgConfig::xxHash)
+
+add_subdirectory(gpu)

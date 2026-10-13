@@ -152,7 +152,7 @@ dependencies:
   - id: vulkan-headers
     name: "Vulkan headers"
     category: header_only_library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:Vulkan]
     source: {type: system_package, package: vulkan-headers, repository: extra, upstream: "https://www.vulkan.org/"}
     version: "1:1.4.363.0-1"
@@ -167,7 +167,7 @@ dependencies:
   - id: vulkan-icd-loader
     name: "Vulkan loader"
     category: runtime_component
-    usage: found_not_linked
+    usage: linked
     lookups: []
     source: {type: system_package, package: vulkan-icd-loader, repository: cachyos-extra-v3, upstream: "https://www.vulkan.org/"}
     version: "1.4.363.0-1.1"
@@ -211,7 +211,7 @@ dependencies:
   - id: nlohmann-json
     name: "nlohmann/json"
     category: header_only_library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:nlohmann_json]
     source: {type: system_package, package: nlohmann-json, repository: extra, upstream: "https://github.com/nlohmann/json"}
     version: "3.12.0-2"

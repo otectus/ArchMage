@@ -92,6 +92,11 @@ archmage_add_test(EvaluatorTest
     LABELS image
     LINKS archmage_render)
 
+archmage_add_test(GpuTest
+    SOURCES core/render/GpuTest.cpp
+    LABELS image
+    LINKS archmage_gpu archmage_commands archmage_brush)
+
 archmage_add_test(CommandsTest
     SOURCES core/commands/CommandsTest.cpp
     LABELS operation

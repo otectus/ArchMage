@@ -104,6 +104,9 @@ public:
     base::Status evaluate(const EvaluationContext &context, ImageBuffer &out) const override;
     base::Status evaluateOver(const EvaluationContext &context, ImageBuffer &dst) const override;
 
+    [[nodiscard]] const std::shared_ptr<const document::Layer> &layer() const { return layer_; }
+    [[nodiscard]] tiles::SampleType sampleType() const { return sampleType_; }
+
 private:
     std::shared_ptr<const document::Layer> layer_;
     tiles::SampleType sampleType_;
