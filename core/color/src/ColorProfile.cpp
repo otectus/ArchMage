@@ -83,6 +83,33 @@ std::shared_ptr<const ColorProfile> ColorProfile::srgb() {
     return instance;
 }
 
+base::Result<std::shared_ptr<const ColorProfile>> ColorProfile::fromPrimaries(const std::string &description,
+                                                                             Chromaticity white, Chromaticity red,
+                                                                             Chromaticity green, Chromaticity blue,
+                                                                             double gamma) {
+    const cmsCIExyY whitePoint{white.x, white.y, 1.0};
+    const cmsCIExyYTRIPLE primaries{{red.x, red.y, 1.0}, {green.x, green.y, 1.0}, {blue.x, blue.y, 1.0}};
+    cmsToneCurve *curve = cmsBuildGamma(nullptr, gamma);
+    cmsToneCurve *curves[3] = {curve, curve, curve};
+    cmsHPROFILE handle = curve != nullptr ? cmsCreateRGBProfile(&whitePoint, &primaries, curves) : nullptr;
+    cmsFreeToneCurve(curve);
+    if (handle == nullptr) {
+        return base::fail(base::ErrorCategory::Validation, "icc.build_failed", "The color profile could not be built",
+                          description);
+    }
+    cmsMLU *text = cmsMLUalloc(nullptr, 1);
+    cmsMLUsetASCII(text, "en", "US", description.c_str());
+    cmsWriteTag(handle, cmsSigProfileDescriptionTag, text);
+    cmsMLUfree(text);
+    cmsUInt32Number size = 0;
+    cmsSaveProfileToMem(handle, nullptr, &size);
+    std::vector<std::byte> bytes(size);
+    cmsSaveProfileToMem(handle, bytes.data(), &size);
+    cmsCloseProfile(handle);
+    fixCreationDate(bytes);
+    return fromIcc(bytes);
+}
+
 ColorPolicy ColorPolicy::defaultPolicy() { return {ColorProfile::srgb(), BlendPolicy::Encoded}; }
 
 base::Result<ColorPolicy> ColorPolicy::make(std::shared_ptr<const ColorProfile> profile,
