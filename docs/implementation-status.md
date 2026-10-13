@@ -9,14 +9,18 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0 to S1-6 (see below); S1-6 still owes the profile A and C benchmark records (S1-6.8), which
-  wait for an idle machine. Next: S1-7, shell: documents, layers, navigation (gate G7).
-- Before starting S1-7, re-run the G6 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
-  `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image, document and
-  resilience tiers.
+- Completed: S1-0 to S1-7 (see below). Two items are outstanding, and both wait on the machine, not on code:
+  - S1-6 owes the profile A and C benchmark records (S1-6.8), which need an idle machine;
+  - S1-7 owes the scripted native-Wayland run of the UI tests (G7), which needs a desktop nobody is using.
+- Next: S1-8, shell: selections, eraser, image I/O, CLI render, recovery UI (gate G8).
+- Before starting S1-8, re-run the G7 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+  `scripts/check-sanitizers.sh`, the ThreadSanitizer run of the operation, image, document and resilience
+  tiers, and the `ci` build.
 - Pending record: `python3 -I scripts/bench_record.py --profile A --wait-idle 5`, then the same with
   `--profile C`, from a `dev-release` build of a clean tree; commit the results and fill in M0-E6 and the
   S1-6.8 row below.
+- Pending run: each UI test program through `python3 -I scripts/experiments/wayland_run.py --focus --class
+  '^<name>$' -- build/dev-debug/tests/<name>`, while nobody uses the desktop; record the results under S1-7's G7.
 - Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
 ## Open questions (plan §6.3)
@@ -47,8 +51,8 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | I-06 | That `-Syu` upgraded 352 packages: Clang 22.1.8 to 23.1.1, Qt 6.11.2 to 6.12.0, kernel 7.2.7 to 7.2.9 (still running 7.2.7). The loaded NVIDIA kernel module is 615.71.09 while `nvidia-utils` is 615.78.08 | S1-0 | Closed 2026-10-13: running kernel 7.2.9, NVIDIA module 615.78.08 matches `nvidia-utils` |
 | I-07 | QVulkanWindow's frame synchronization raises VUID-vkQueueSubmit-pSignalSemaphores-00067 on every frame with validation layers 1.4.363, and QVulkanWindow offers no swapchain color space selection (the NVIDIA Wayland driver lists `PASS_THROUGH` first) | S1-1 | An ArchMage-owned Vulkan swapchain before the Vulkan adapter becomes the default (ADR-0011); no later than M4 |
 | I-08 | Qt's QRhi Vulkan backend raises VUID-VkImageCreateInfo-initialLayout-12478 | S1-1 | Nothing while QRhiWidget stays experimental (ADR-0011) |
-| I-09 | Raster canvas repaints are not paced to the display: 747 frames for 746 input events in 3 s on a 60 Hz output | S1-1 | Pace canvas repaints with `QWindow::requestUpdate` when the real canvas lands (S1-3, S1-7) |
-| I-10 | Under XWayland the scale-1 tooltip probe was never shown (Qt reported it hidden), identically for all three surfaces; the scale-1.5 one was | S1-1 | Investigate with the real tooltips in S1-7 |
+| I-09 | Raster canvas repaints are not paced to the display: 747 frames for 746 input events in 3 s on a 60 Hz output | S1-1 | Pace canvas repaints to the display. Not done in S1-3 or S1-7; S1-8's animated selection outline needs it, so it lands there |
+| I-10 | Under XWayland the scale-1 tooltip probe was never shown (Qt reported it hidden), identically for all three surfaces; the scale-1.5 one was | S1-1 | Not investigated in S1-7, whose tooltips are tested offscreen only; check under XWayland in the S1-9 demonstration |
 | I-11 | Hyprland 0.56 window-rule handles can only be disabled, not removed; the experiment driver's rules stay registered, disabled, until the next config reload | S1-1 | Nothing; they match only the `archmage-experiment` class |
 
 ## M0 deliverables and experiments (plan §1.2)
@@ -772,6 +776,134 @@ they will be committed to `main` as a follow-up.
 - Third-party fixtures go in `docs/dependencies/manifest.yaml` (`fixtures`) and in the corpus register,
   together with their license evidence.
 
-## S1-7 to S1-9
+## S1-7 Shell: documents, layers, navigation: complete except the scripted Wayland run, 2026-10-13
+
+Work on branch `s1-7-shell` (`4da3c00`, `bbbf861`, `0ab75c1`, `a31ef05`, `bf3103d`, `1d6371e`, `c35d8c9`,
+`75fc318`), merged to `main` in `22d2fce`, whose tree equals the branch's last commit. The G6 checks were not
+re-run on `f8a2fef` before work began: that commit changed only this document after the G6 run on `e644dc3`. The
+full set passes on the S1-7 tree below.
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-7.1 Main window | Automatically tested | `MainWindow` with the spec §2.2 regions: the nine menus, an options row, a one-column tool strip, tabbed documents behind an empty page that offers New and Open, Color above Layers in the right dock, and a status bar (job, document coordinates, zoom, durability). `ShellTest::regionsMatchTheTargetLayout` at 1440 × 900: options row height, tool strip width and dock width each within 10 % of 36, 44 and 300 px; Color above Layers. `menusOfferOnlyWorkingCommands`: Image, Select and Filter each hold one disabled entry saying there are no commands yet; document commands are disabled without a document |
+| S1-7.2 Document tabs | Automatically tested | New (dialog), Open and Save on a two-thread pool, Save As, Close with Save, Discard or Cancel; the tab and window titles carry `*` while the revision differs from the clean save point. `ShellTest::modifiedMarkerFollowsTheSavePoint`: modify, undo back, the marker clears, also after a save and before it; `closingAModifiedDocumentAsks`, `openingAndSwitchingDocuments`. `ShellPromptsTest` drives the shipped Qt dialogs (New Document defaults and choices, the three close answers and Escape, the save path's extension) |
+| S1-7.3 Layers panel | Automatically tested | `LayersModel` over the current revision (top layer first; thumbnails rendered on demand into a 256-entry cache) and `LayersPanel` (inline rename, drag reorder, visibility and lock, new, duplicate, delete, opacity slider). `LayersPanelTest`: 2,000 layers with fewer than 40 child widgets and thumbnails only for the rows drawn; a real slider drag is one "Layer Opacity" history item; renames, toggles and drops become commands |
+| S1-7.4 Color panel and eyedropper | Automatically tested | `ColorState`; `ColorPanel` (the swatches open `QColorDialog`; swap and reset buttons); `EyedropperTool` samples the composite. `ColorPanelTest`: X and D by key and by button, the brush paints the foreground, the eyedropper picks a painted pixel and the opaque background and adds no history item. The plan's eyedropper check by a person is not done (deviation 2) |
+| S1-7.5 Navigation | Automatically tested | `HandTool`; `ZoomTool` (click ×2, Alt-click ×0.5, a horizontal scrub doubles the scale per 120 logical pixels); Space as a temporary hand; wheel zoom about the cursor; Ctrl+0 fit, Ctrl+1 actual pixels, Ctrl+= and Ctrl+- zoom; the S1-3 transparency checkerboard. `NavigationTest` (7 tests): the document point under the cursor stays within 1e-6 px, hand and Space pans add no history item, a wheel over an unfocused spin box changes neither the view nor the value |
+| S1-7.6 Shortcut profile | Automatically tested | App. B shortcuts of the shipped actions: New, Open, Save, Save As, Undo, Redo, New Layer, Duplicate, B, H, Z, I, X, D, [, ], Tab, Enter, Escape. `ShellTest::singleLetterShortcutsSwitchTools`; `textInputKeepsSingleLetters` (B, Z and I typed into the rename editor stay text and the tool does not change); `tabTogglesPanelsOnlyFromTheCanvas` |
+| S1-7.7 Tool lifecycle | Automatically tested | `Tool` with activate, deactivate, suspend, resume, Escape and Enter (ADR-0105); the options row shows the active tool's page. `ShellTest::switchingDocumentsMidStrokeCommitsIt`: switching documents mid-stroke commits one "Brush Stroke" item and a late release does nothing; `NavigationTest::spaceIsATemporaryHand` |
+| S1-7.8 Theme and accessible names | Automatically tested | `Theme`: Fusion with a dark palette, violet accent `#8B6FE8`, 13 original SVG icons. `ShellTest::iconControlsHaveTooltipsAndNames`: every action with an icon has a tooltip with its shortcut, every visible icon button has an accessible name, and no action's tooltip carries a mnemonic marker or a menu hint. The themed window was reviewed in an offscreen snapshot (`ARCHMAGE_SNAPSHOT_DIR`) |
+| S1-7.9 Keyboard access | Automatically tested | Alt mnemonics on the menus; F6 and Shift+F6 between the options row, canvas and Layers list; the list with arrows, Space and F2. `ShellTest::layersCanBeDrivenByKeyboardAlone` selects, renames and hides a layer with the keyboard only; `altOpensTheMenus` |
+
+### Exit gate G7
+
+- Offscreen UI tier green: met (`scripts/check-ui.sh`, 9 of 9 programs).
+- Navigation and input checks listed with results: met (table below).
+- Manual Wayland run covering create, paint, opacity, undo and redo, reorder, zoom and pan: **not met**. No
+  person ran it. Its scripted substitute (the six UI test programs on a headless Wayland output) is pending, because
+  the windows must take keyboard focus and so must run while nobody uses the desktop. A silent run, which leaves
+  the user's focus alone, cannot activate the windows: `NavigationTest` failed 7 of 7 at its fixture.
+
+S1-7 was merged with the Wayland run outstanding, as S1-6 was with its benchmark records. The run depends on an
+unused desktop, not on code. Its results will be added here from `main`.
+
+### Navigation and input checks
+
+Each check passes offscreen (`scripts/check-ui.sh`). On native Wayland, every check is pending the scripted run.
+
+| Check | Test |
+| --- | --- |
+| Create a document from File > New | `ShellPromptsTest::newDocumentDialog`; the window's `newDocument` in every shell test |
+| Paint with the foreground color | `ColorPanelTest::brushPaintsWithTheForeground`, `BrushSliceTest` |
+| Layer opacity drag is one history item | `LayersPanelTest::opacityDragIsOneHistoryItem` |
+| Undo and redo; modified marker | `ShellTest::modifiedMarkerFollowsTheSavePoint` |
+| Reorder by drop | `LayersPanelTest::dragAndDropReorders` (the model's drop handler, not a platform drag) |
+| Zoom: wheel, zoom tool, Ctrl+0, Ctrl+1, Ctrl+= | `NavigationTest::wheelZoomsAboutTheCursor`, `zoomToolClicksAndScrubs`, `fitAndActualPixelsShortcuts` |
+| Pan: hand tool, Space | `NavigationTest::handDragPans`, `spaceIsATemporaryHand` |
+| Wheel over a spin box | `NavigationTest::wheelOverASpinBoxDoesNotNavigate` |
+| Tool letters, [ and ] | `ShellTest::singleLetterShortcutsSwitchTools` |
+| Letters typed into a text field | `ShellTest::textInputKeepsSingleLetters` |
+| Tab, F6, keyboard-only layers | `ShellTest::tabTogglesPanelsOnlyFromTheCanvas`, `layersCanBeDrivenByKeyboardAlone` |
+| Alt opens the menus | `ShellTest::altOpensTheMenus` |
+| Eyedropper; X and D | `ColorPanelTest::eyedropperSamplesTheComposite`, `swapAndResetByShortcutAndButton` |
+| Document switch mid-stroke | `ShellTest::switchingDocumentsMidStrokeCommitsIt` |
+| Pointer coordinates in the status bar | `NavigationTest::statusBarFollowsThePointer` |
+
+### Commands and results (2026-10-13)
+
+| Command | Result |
+| --- | --- |
+| `scripts/check.sh` (tree of `c35d8c9`) | exit 0; 181/181 non-UI tests; manifest: 39 entries cover 22 lookups; ledger valid (121 entries), report current |
+| `scripts/check-ui.sh` (tree of `1d6371e`) | exit 0; 9/9 |
+| `scripts/check-sanitizers.sh` at low priority (tree of `bf3103d`), then `ctest --preset asan-ubsan -R ShellPromptsTest` (tree of `1d6371e`) | 189/189 and 1/1; 0 compiler warnings |
+| `cmake --preset tsan && cmake --build --preset tsan && ctest --preset tsan -L "operation\|image\|document\|resilience"` (tree of `bf3103d`) | 114/114, no ThreadSanitizer reports; the 7 GPU tests skip |
+| `cmake --preset ci && cmake --build --preset ci && ctest --preset ci --label-exclude '^(perf)$'` (tree of `bf3103d`), then `ShellPromptsTest` built and run in that tree (tree of `1d6371e`) | 189/189 and 1/1; 0 warnings under `-Werror` |
+| `python3 -I scripts/experiments/wayland_run.py --class '^NavigationTest$' -- ./build/dev-debug/tests/NavigationTest` (silent) | 2 passed, 7 failed at `ShellFixture::ready()`: a window on a silent workspace never becomes active. The user's focus stayed where it was |
+
+### Deviations from the plan
+
+1. G7's manual Wayland run was not done by a person. As in S1-3, the person's run belongs to the S1-9
+   demonstration. Its scripted substitute is pending (see G7).
+2. S1-7.4's eyedropper is tested automatically, offscreen, instead of by hand.
+3. Reordering is tested through the model's drop handler. `QDrag::exec` runs its own event loop and needs a
+   real pointer, so a platform drag on Wayland is left to the person's run.
+4. Tab toggles the panels only from the canvas, and F6 moves between regions (ADR-0105); App. B lists Tab as a
+   global shortcut.
+5. The App. B shortcuts of commands that arrive in S1-8 (Select All, Deselect, Invert, E, M) are not bound yet.
+6. Save chosen in the close prompt runs synchronously (ADR-0105).
+7. I-09 (repaint pacing) and I-10 (the XWayland tooltip probe) were not addressed; their rows above say where they
+   go next.
+
+### Progress report (plan §8.2)
+
+#### S1-7 Shell: documents, layers, navigation, 2026-10-13
+
+- **Implemented outcomes:**
+  - a themed main window with the spec's regions, tabbed documents, and New, Open, Save, Save As and Close with
+    the clean save point;
+  - a Layers panel that stays light at 2,000 layers, with an opacity slider whose drag is one history item;
+  - foreground and background colors, an eyedropper, and hand, zoom and Space navigation;
+  - App. B shortcuts with text fields taking precedence;
+  - a defined tool lifecycle for interruptions (ADR-0105);
+  - keyboard access to the menus, regions and layers;
+  - journaling and the durability state for every open document.
+- **Changed modules:**
+  - `core/commands`: `MutationExecutor::drain`;
+  - `ui`: `MainWindow`, `Theme`, `ColorState`, `OptionsRow`, `ShellPrompts`, `DocumentView`, `DocumentSession`,
+    `tools/` (`Tool`, `NavigationTools`), `panels/`, and `CanvasSurface::viewChanged`;
+  - `apps/archmage`: the theme, and files named on the command line;
+  - `resources/icons`;
+  - `tests/ui`: five new programs;
+  - `scripts/experiments/wayland_run.py`: `--focus`.
+- **Passing evidence (commands and result paths):** the table above.
+- **Manual validation (what, how, platform):** none by a person. The themed window was reviewed in an offscreen
+  snapshot. The scripted native-Wayland run is pending.
+- **Performance changes (benchmark result file):** none. The 2,000-layer panel test bounds widgets and thumbnails,
+  not time.
+- **Migrations:** none.
+- **Dependency changes (manifest diff):** `qt6-svg` changes from `found_not_linked` to `runtime`, because the SVG
+  icon engine plugin loads the icons. No new lookups.
+- **Open risks:**
+  - nothing has run on a real compositor with focus yet, including popups (menus) on Wayland, which need an input
+    serial;
+  - closing a large document with Save blocks the window;
+  - repaints are not paced to the display (I-09).
+- **State by behavior:**
+  - every S1-7 behavior listed above is automatically tested offscreen;
+  - nothing is manually tested by a person or verified against a benchmark product.
+- **Sample document:** `docs/samples/s1-4-layered.archmage` (unchanged).
+
+### Notes for the next session
+
+- The shell tests need an active window. On native Wayland, run them with `wayland_run.py --focus`, and only while
+  nobody uses the desktop.
+- `ShellPrompts` keeps dialogs out of the shell tests. New dialogs go behind it and get a `ShellPromptsTest` case
+  that drives the real dialog.
+- Close, Save and the modified check drain the executor first. New commands that should count before a save
+  need nothing more.
+
+## S1-8 to S1-9
 
 Not started.
