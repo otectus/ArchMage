@@ -77,6 +77,11 @@ archmage_add_test(ColorTest
     LABELS math
     LINKS archmage_color LCMS2::LCMS2)
 
+archmage_add_test(DocumentTest
+    SOURCES core/document/DocumentTest.cpp
+    LABELS document
+    LINKS archmage_document)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math
