@@ -317,6 +317,13 @@ void ShellTest::iconControlsHaveTooltipsAndNames() {
         }
     }
     QVERIFY(checked >= 9);
+    // Every named action's tooltip is plain text: no mnemonic marker and no menu shortcut hint.
+    for (QAction *action : shell.window->findChildren<QAction *>()) {
+        if (action->objectName().contains(QLatin1Char('.'))) {
+            QVERIFY2(!action->toolTip().contains(QLatin1Char('\t')) && !action->toolTip().contains(QLatin1Char('&')),
+                     qPrintable(action->objectName() + QStringLiteral(": ") + action->toolTip()));
+        }
+    }
     int buttons = 0;
     for (QToolButton *button : shell.window->findChildren<QToolButton *>()) {
         if (button->icon().isNull() || !button->isVisible()) {

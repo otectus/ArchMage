@@ -36,6 +36,7 @@ namespace archmage::ui {
 namespace {
 
 QString plainText(QString text) {
+    text = text.section(QLatin1Char('\t'), 0, 0); // drop a shortcut hint shown after a tab in menus
     text.remove(QLatin1Char('&'));
     text.remove(QStringLiteral("…"));
     return text.trimmed();
