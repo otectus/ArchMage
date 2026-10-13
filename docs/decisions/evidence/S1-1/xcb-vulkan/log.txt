@@ -1,0 +1,137 @@
+QTMSG 1 qt.qpa.services: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not register app ID: App info not found for 'archmage-experiment'")
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x1a000000001a) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0xc000000000c.
+Most recently acquired image indices: [2], 1, 0.
+(Brackets mark the last use of VkSemaphore 0x1a000000001a in a presentation operation.)
+Swapchain image 2 was presented but was not re-acquired, so VkSemaphore 0x1a000000001a may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+EVIDENCE started {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","kind":"vulkan","pid":1565260,"platform":"xcb","validation_active":true,"validation_requested":true}
+STEP actual
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x1d000000001d) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0xc000000000c.
+Most recently acquired image indices: 2, [1], 0, 2.
+(Brackets mark the last use of VkSemaphore 0x1d000000001d in a presentation operation.)
+Swapchain image 1 was presented but was not re-acquired, so VkSemaphore 0x1d000000001d may still be in use and cannot be safely reused with image index 2.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+STEP report:s1-start
+EVIDENCE geometry {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","canvas_logical":[0,56,762,522],"device":[762,522],"dpr":1,"frame":"/tmp/archmage-canvas-matrix/xcb-vulkan/s1-start-frame.png","frames_presented":5,"kind":"vulkan","platform":"xcb","screen":"ARCHMAGE-S10","tag":"s1-start","view":[1,381,261],"window_dpr":1,"window_logical":[1024,600]}
+SNAP s1-start
+STEP popup:s1-popup
+LATENCY backend=vulkan frames=1 p50_ms=7.67 p95_ms=7.67 max_ms=7.67 render_p50_ms=1.07 render_p95_ms=1.07
+EVIDENCE popup {"rect_logical":[448,231,128,174],"tag":"s1-popup","visible":true}
+SNAP s1-popup
+STEP tooltip:s1-tooltip
+EVIDENCE tooltip {"tag":"s1-tooltip","visible":false}
+SNAP s1-tooltip
+STEP dock-float:s1-float
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x390000000039) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x2b000000002b.
+Most recently acquired image indices: [2], 1, 0.
+(Brackets mark the last use of VkSemaphore 0x390000000039 in a presentation operation.)
+Swapchain image 2 was presented but was not re-acquired, so VkSemaphore 0x390000000039 may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x3c000000003c) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x2b000000002b.
+Most recently acquired image indices: 2, [1], 0, 2.
+(Brackets mark the last use of VkSemaphore 0x3c000000003c in a presentation operation.)
+Swapchain image 1 was presented but was not re-acquired, so VkSemaphore 0x3c000000003c may still be in use and cannot be safely reused with image index 2.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+EVIDENCE geometry {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","canvas_logical":[0,56,1024,522],"device":[1024,522],"dpr":1,"frame":"/tmp/archmage-canvas-matrix/xcb-vulkan/s1-float-frame.png","frames_presented":12,"kind":"vulkan","platform":"xcb","screen":"ARCHMAGE-S10","tag":"s1-float","view":[1,381,261],"window_dpr":1,"window_logical":[1024,600]}
+SNAP s1-float
+STEP dock-redock:s1-redock
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x580000000058) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x4a000000004a.
+Most recently acquired image indices: [2], 1, 0.
+(Brackets mark the last use of VkSemaphore 0x580000000058 in a presentation operation.)
+Swapchain image 2 was presented but was not re-acquired, so VkSemaphore 0x580000000058 may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+EVIDENCE geometry {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","canvas_logical":[0,56,762,522],"device":[762,522],"dpr":1,"frame":"/tmp/archmage-canvas-matrix/xcb-vulkan/s1-redock-frame.png","frames_presented":15,"kind":"vulkan","platform":"xcb","screen":"ARCHMAGE-S10","tag":"s1-redock","view":[1,381,261],"window_dpr":1,"window_logical":[1024,600]}
+SNAP s1-redock
+STEP resize-storm:s1-storm
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x1500000000150) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x1420000000142.
+Most recently acquired image indices: [2], 1, 0.
+(Brackets mark the last use of VkSemaphore 0x1500000000150 in a presentation operation.)
+Swapchain image 2 was presented but was not re-acquired, so VkSemaphore 0x1500000000150 may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x79c000000079c) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x78e000000078e.
+Most recently acquired image indices: [2], 1, 0.
+(Brackets mark the last use of VkSemaphore 0x79c000000079c in a presentation operation.)
+Swapchain image 2 was presented but was not re-acquired, so VkSemaphore 0x79c000000079c may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+EVIDENCE resize-storm {"frames_during":106,"iterations":60,"tag":"s1-storm"}
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x79f000000079f) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x78e000000078e.
+Most recently acquired image indices: 2, [1], 0, 2.
+(Brackets mark the last use of VkSemaphore 0x79f000000079f in a presentation operation.)
+Swapchain image 1 was presented but was not re-acquired, so VkSemaphore 0x79f000000079f may still be in use and cannot be safely reused with image index 2.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+EVIDENCE geometry {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","canvas_logical":[0,56,798,522],"device":[798,522],"dpr":1,"frame":"/tmp/archmage-canvas-matrix/xcb-vulkan/s1-storm-frame.png","frames_presented":122,"kind":"vulkan","platform":"xcb","screen":"ARCHMAGE-S10","tag":"s1-storm","view":[1,381,261],"window_dpr":1,"window_logical":[1024,600]}
+SNAP s1-storm
+STEP dialog:s1-focus
+EVIDENCE focus {"after":{"active_window":"QMainWindow(archmageExperimentWindow)","focus_widget":"QWindowContainer(archmageCanvas)","focus_window":"QVulkanWindow(archmageCanvasWindow)"},"before":{"active_window":"QMainWindow(archmageExperimentWindow)","focus_widget":"QWindowContainer(archmageCanvas)","focus_window":"QVulkanWindow(archmageCanvasWindow)"},"during":{"active_window":"QDialog(probeDialog)","focus_widget":"QLineEdit(probeEdit)","focus_window":"QWidgetWindow(probeDialogWindow)"},"restored":true,"tag":"s1-focus","trials_left":2}
+EVIDENCE focus {"after":{"active_window":"QMainWindow(archmageExperimentWindow)","focus_widget":"QWindowContainer(archmageCanvas)","focus_window":"QVulkanWindow(archmageCanvasWindow)"},"before":{"active_window":"QMainWindow(archmageExperimentWindow)","focus_widget":"QWindowContainer(archmageCanvas)","focus_window":"QVulkanWindow(archmageCanvasWindow)"},"during":{"active_window":"QDialog(probeDialog)","focus_widget":"QLineEdit(probeEdit)","focus_window":"QWidgetWindow(probeDialogWindow)"},"restored":true,"tag":"s1-focus","trials_left":1}
+EVIDENCE focus {"after":{"active_window":"QMainWindow(archmageExperimentWindow)","focus_widget":"QWindowContainer(archmageCanvas)","focus_window":"QVulkanWindow(archmageCanvasWindow)"},"before":{"active_window":"QMainWindow(archmageExperimentWindow)","focus_widget":"QWindowContainer(archmageCanvas)","focus_window":"QVulkanWindow(archmageCanvasWindow)"},"during":{"active_window":"QDialog(probeDialog)","focus_widget":"QLineEdit(probeEdit)","focus_window":"QWidgetWindow(probeDialogWindow)"},"restored":true,"tag":"s1-focus","trials_left":0}
+STEP drag:3000
+VULKAN-VALIDATION severity=error vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x79f000000079f) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x78e000000078e.
+Most recently acquired image indices: 2, 2, 2, 2, 2, [1], 2, 0.
+(Brackets mark the last use of VkSemaphore 0x79f000000079f in a presentation operation.)
+Swapchain image 1 was presented but was not re-acquired, so VkSemaphore 0x79f000000079f may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+LATENCY backend=vulkan frames=12 p50_ms=6.64 p95_ms=17.29 max_ms=18.32 render_p50_ms=1.18 render_p95_ms=1.87
+LATENCY backend=vulkan frames=60 p50_ms=16.66 p95_ms=17.56 max_ms=18.94 render_p50_ms=1.02 render_p95_ms=1.77
+LATENCY backend=vulkan frames=60 p50_ms=16.64 p95_ms=16.94 max_ms=21.63 render_p50_ms=1.01 render_p95_ms=1.11
+LATENCY backend=vulkan frames=54 p50_ms=16.66 p95_ms=16.78 max_ms=16.92 render_p50_ms=1.01 render_p95_ms=1.06
+EVIDENCE latency {"duration_ms":3000,"events":372,"frames":186,"max_ms":21.63377,"p50_ms":16.647306,"p95_ms":17.407331,"render_p50_ms":1.015815,"render_p95_ms":1.306296}
+STEP move:s15
+MOVE s15
+VULKAN-VALIDATION severity=error (Warning - This VUID has now been reported 10 times, which is the duplicate_message_limit value, this will be the last time reporting it).
+vkQueueSubmit(): pSubmits[0].pSignalSemaphores[0] (VkSemaphore 0x7bb00000007bb) is being signaled by VkQueue 0x5646c273e260, but it may still be in use by VkSwapchainKHR 0x7ad00000007ad.
+Most recently acquired image indices: [2], 1, 0.
+(Brackets mark the last use of VkSemaphore 0x7bb00000007bb in a presentation operation.)
+Swapchain image 2 was presented but was not re-acquired, so VkSemaphore 0x7bb00000007bb may still be in use and cannot be safely reused with image index 0.
+Hint: See https://docs.vulkan.org/guide/latest/swapchain_semaphore_reuse.html for details on swapchain semaphore reuse. Examples of possible approaches:
+   a) Use a separate semaphore per swapchain image. Index these semaphores using the index of the acquired image.
+   b) Consider the VK_KHR_swapchain_maintenance1 extension. It allows using a VkFence with the presentation operation.
+The Vulkan spec states: Each binary semaphore element of the pSignalSemaphores member of any element of pSubmits must be unsignaled when the semaphore signal operation it defines is executed on the device (https://docs.vulkan.org/spec/latest/chapters/cmdbuffers.html#VUID-vkQueueSubmit-pSignalSemaphores-00067)
+EVIDENCE move {"dpr_after":1,"dpr_before":1,"screen_after":"ARCHMAGE-S15","screen_before":"ARCHMAGE-S10","target":"s15","timed_out":false}
+STEP actual
+STEP report:s15-start
+EVIDENCE geometry {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","canvas_logical":[0,56,1310,822],"device":[1310,822],"dpr":1,"frame":"/tmp/archmage-canvas-matrix/xcb-vulkan/s15-start-frame.png","frames_presented":318,"kind":"vulkan","platform":"xcb","screen":"ARCHMAGE-S15","tag":"s15-start","view":[1,655,411],"window_dpr":1,"window_logical":[1536,900]}
+SNAP s15-start
+STEP popup:s15-popup
+LATENCY backend=vulkan frames=1 p50_ms=26.85 p95_ms=26.85 max_ms=26.85 render_p50_ms=21.49 render_p95_ms=21.49
+EVIDENCE popup {"rect_logical":[703,360,129,174],"tag":"s15-popup","visible":true}
+SNAP s15-popup
+STEP tooltip:s15-tooltip
+EVIDENCE tooltip {"rect_logical":[697,426,141,41],"tag":"s15-tooltip","visible":true}
+SNAP s15-tooltip
+STEP move:s10
+MOVE s10
+EVIDENCE move {"dpr_after":1,"dpr_before":1,"screen_after":"ARCHMAGE-S10","screen_before":"ARCHMAGE-S15","target":"s10","timed_out":false}
+STEP actual
+STEP report:s10-back
+EVIDENCE geometry {"backend":"QVulkanWindow in a window container, Vulkan 1.4 on NVIDIA GeForce RTX 4050 Laptop GPU, swapchain format 44","canvas_logical":[0,56,798,522],"device":[798,522],"dpr":1,"frame":"/tmp/archmage-canvas-matrix/xcb-vulkan/s10-back-frame.png","frames_presented":327,"kind":"vulkan","platform":"xcb","screen":"ARCHMAGE-S10","tag":"s10-back","view":[1,399,261],"window_dpr":1,"window_logical":[1024,600]}
+SNAP s10-back
+STEP quit
+EVIDENCE exit {"exit_code":0,"qt_validation_messages":0,"validation_active":true,"vk_validation_messages":10}
