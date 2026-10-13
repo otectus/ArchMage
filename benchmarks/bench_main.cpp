@@ -175,7 +175,16 @@ int main(int argc, char **argv) {
             frames = std::max(10, std::atoi(argv[++i]));
         } else if (arg == "--strokes" && i + 1 < argc) {
             strokes = std::max(5, std::atoi(argv[++i]));
+        } else {
+            // Anything else, --help included, prints usage: the benchmark is heavy and must not start by
+            // accident.
+            std::fprintf(stderr, "usage: bench_main [--profile A|C] [--frames N] [--strokes N]\n");
+            return arg == "--help" || arg == "-h" ? 0 : 2;
         }
+    }
+    if (profile != "A" && profile != "C") {
+        std::fprintf(stderr, "bench_main: profile %s cannot be measured here (A, or C simulated)\n", profile.c_str());
+        return 2;
     }
     if (profile == "C") {
         ::setenv("ARCHMAGE_FORCE_CPU", "1", 1);
