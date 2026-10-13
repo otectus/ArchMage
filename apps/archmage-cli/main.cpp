@@ -1,23 +1,155 @@
-// ArchMage headless command-line interface (spec App. A.4). Qt-free (D-07).
-// S1-0 provides --version only; validate and inspect arrive in S1-4, recover in S1-5,
-// render in S1-8.
+// ArchMage headless command-line interface (spec App. A.4, §23.3). Qt-free (D-07).
+// validate and inspect arrive in S1-4, recover in S1-5, render in S1-8.
+//
+// Output contract: human-readable text by default; --json prints one JSON document on stdout. Errors are
+// structured records {category, code, message, detail}: in the JSON document with --json, otherwise one
+// line on stderr. Nothing waits for input.
 
 #include "archmage/document/Version.h"
+#include "archmage/native/NativeFile.h"
 
 #include <CLI/CLI.hpp>
+#include <nlohmann/json.hpp>
 
 #include <exception>
 #include <iostream>
+#include <string>
 
 namespace {
 
+using archmage::base::Error;
+using nlohmann::json;
+
 // Exit codes shared by every subcommand (App. A.4, plan S1-4.8): 0 ok, 1 invalid input, 2 error.
 constexpr int kExitOk = 0;
+constexpr int kExitInvalid = 1;
 constexpr int kExitError = 2;
+
+json errorRecord(const Error &error) {
+    return {{"category", std::string(archmage::base::categoryName(error.category))},
+            {"code", error.code},
+            {"message", error.message},
+            {"detail", error.detail}};
+}
+
+// A file that could not be examined at all (missing, unreadable): exit 2.
+int reportError(const Error &error, bool asJson) {
+    if (asJson) {
+        std::cout << json{{"ok", false}, {"error", errorRecord(error)}}.dump(2) << '\n';
+    } else {
+        std::cerr << "archmage-cli: " << archmage::base::format(error) << '\n';
+    }
+    return kExitError;
+}
+
+int runValidate(const std::string &file, bool deep, bool asJson) {
+    using archmage::native::ValidationLevel;
+    const ValidationLevel level = deep ? ValidationLevel::Deep : ValidationLevel::Standard;
+    auto report = archmage::native::validateFile(file, level);
+    if (!report) {
+        return reportError(report.error(), asJson);
+    }
+    const int exitCode = report->valid() ? kExitOk : kExitInvalid;
+    if (asJson) {
+        json problems = json::array();
+        for (const Error &problem : report->problems) {
+            problems.push_back(errorRecord(problem));
+        }
+        json out{{"ok", report->valid()},
+                 {"file", file},
+                 {"level", deep ? "deep" : "standard"},
+                 {"schema", {{"major", report->info.schemaMajor}, {"minor", report->info.schemaMinor}}},
+                 {"readOnly", report->info.readOnly},
+                 {"counts",
+                  {{"objects", report->objects},
+                   {"relations", report->relations},
+                   {"resources", report->resources},
+                   {"tilePlanes", report->tilePlanes},
+                   {"resourcesVerified", report->resourcesVerified}}},
+                 {"problems", problems},
+                 {"notes", report->notes}};
+        if (report->info.readOnly) {
+            out["readOnlyReason"] = report->info.readOnlyReason;
+        }
+        std::cout << out.dump(2) << '\n';
+        return exitCode;
+    }
+    if (report->valid()) {
+        std::cout << "valid: " << file << " (format " << report->info.schemaMajor << '.' << report->info.schemaMinor
+                  << ", " << report->objects << " objects, " << report->tilePlanes << " tile planes, "
+                  << report->resources << " resources";
+        if (deep) {
+            std::cout << ", " << report->resourcesVerified << " verified";
+        }
+        std::cout << ")\n";
+    } else {
+        std::cout << "invalid: " << file << '\n';
+        for (const Error &problem : report->problems) {
+            std::cout << "  " << archmage::base::format(problem) << '\n';
+        }
+    }
+    for (const std::string &note : report->notes) {
+        std::cout << "note: " << note << '\n';
+    }
+    return exitCode;
+}
+
+int runInspect(const std::string &file, bool asJson) {
+    auto inspected = archmage::native::inspectFile(file);
+    if (!inspected) {
+        // A file that is not an ArchMage document, or is damaged, is invalid input rather than an error.
+        const auto category = inspected.error().category;
+        const bool invalid = category == archmage::base::ErrorCategory::DamagedInput ||
+                             category == archmage::base::ErrorCategory::UnsupportedInput;
+        const int code = reportError(inspected.error(), asJson);
+        return invalid ? kExitInvalid : code;
+    }
+    const json &out = *inspected;
+    if (asJson) {
+        std::cout << out.dump(2) << '\n';
+        return kExitOk;
+    }
+    std::cout << file << ": ArchMage document, format " << out["schema"]["major"] << '.' << out["schema"]["minor"]
+              << '\n';
+    const json &manifest = out["manifest"];
+    for (const char *key : {"document_id", "derived_from", "current_revision", "writer", "saved_at"}) {
+        if (manifest.contains(key)) {
+            std::cout << "  " << key << ": " << manifest[key].get<std::string>() << '\n';
+        }
+    }
+    if (out.value("readOnly", false)) {
+        std::cout << "  read-only: " << out["readOnlyExplanation"].get<std::string>() << '\n';
+    }
+    if (out.contains("layers")) {
+        std::cout << "  layers (bottom to top):\n";
+        for (const json &layer : out["layers"]) {
+            std::cout << "    " << layer["index"] << ' ' << layer.value("name", std::string("?")) << " ["
+                      << layer["type"].get<std::string>() << "]\n";
+        }
+        std::cout << "  resources: " << out["resources"]["count"] << " (" << out["resources"]["storedBytes"]
+                  << " bytes stored, " << out["resources"]["rawBytes"] << " raw)\n";
+    }
+    return kExitOk;
+}
 
 int run(int argc, char **argv) {
     CLI::App app{"ArchMage headless command-line interface", "archmage-cli"};
     app.set_version_flag("--version", archmage::document::versionBanner(), "Print the version and exit");
+    app.require_subcommand(0, 1);
+
+    std::string validateFile;
+    bool deep = false;
+    bool validateJson = false;
+    CLI::App *validate = app.add_subcommand("validate", "Check an .archmage file's structure, references and content");
+    validate->add_option("file", validateFile, "The .archmage file")->required();
+    validate->add_flag("--deep", deep, "Also run SQLite's integrity check and verify every stored resource");
+    validate->add_flag("--json", validateJson, "Print the report as JSON");
+
+    std::string inspectFile;
+    bool inspectJson = false;
+    CLI::App *inspect = app.add_subcommand("inspect", "Describe an .archmage file without loading its pixels");
+    inspect->add_option("file", inspectFile, "The .archmage file")->required();
+    inspect->add_flag("--json", inspectJson, "Print the description as JSON");
 
     try {
         app.parse(argc, argv);
@@ -26,6 +158,12 @@ int run(int argc, char **argv) {
         return app.exit(error) == 0 ? kExitOk : kExitError;
     }
 
+    if (validate->parsed()) {
+        return runValidate(validateFile, deep, validateJson);
+    }
+    if (inspect->parsed()) {
+        return runInspect(inspectFile, inspectJson);
+    }
     std::cout << app.help();
     return kExitOk;
 }

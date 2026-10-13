@@ -178,3 +178,13 @@ archmage_add_test(At001Test
 add_executable(archmage-native-fixture io/native/FixtureTool.cpp)
 target_link_libraries(archmage-native-fixture PRIVATE archmage_native archmage_commands archmage_brush archmage_render)
 archmage_target_warnings(archmage-native-fixture)
+
+# CLI subprocess checks: validate and inspect on the fixture, a damaged copy and a missing file.
+add_test(NAME cli.native
+    COMMAND "${CMAKE_COMMAND}"
+        -D "CLI=$<TARGET_FILE:archmage-cli>"
+        -D "FIXTURE_TOOL=$<TARGET_FILE:archmage-native-fixture>"
+        -D "FIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/io/native/fixtures/v0.1.archmage"
+        -D "WORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli-native"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cli/CheckNativeCli.cmake")
+set_tests_properties(cli.native PROPERTIES LABELS interchange)
