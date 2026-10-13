@@ -163,7 +163,7 @@ archmage_add_test(BrushSliceTest
     QT)
 
 # Shell (S1-7): regions, documents, layers, colors, navigation and keyboard access, all offscreen.
-foreach(shell_test IN ITEMS ShellTest LayersPanelTest NavigationTest ColorPanelTest)
+foreach(shell_test IN ITEMS ShellTest LayersPanelTest NavigationTest ColorPanelTest ShellPromptsTest)
     archmage_add_test(${shell_test}
         SOURCES ui/${shell_test}.cpp ui/ShellTestSupport.h
         LABELS ui
