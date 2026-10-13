@@ -2,6 +2,7 @@
 
 #include "archmage/ui/document/DocumentSession.h"
 #include "archmage/ui/input/InputMapper.h"
+#include "archmage/ui/tools/NavigationTools.h"
 
 #include <QKeyEvent>
 #include <QVBoxLayout>
@@ -18,6 +19,7 @@ DocumentView::DocumentView(DocumentSession &session, QWidget *parent)
     }
     surface_->setFrameSource(&frameSource_);
     surface_->setInputSink(this);
+    surface_->widget()->setAccessibleName(QStringLiteral("Canvas"));
     auto *layout = new QVBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->addWidget(surface_->widget());
@@ -34,10 +36,12 @@ DocumentView::DocumentView(DocumentSession &session, QWidget *parent)
             fitToView();
         }
     });
+    connect(surface_.get(), &canvas::CanvasSurface::viewChanged, this, &DocumentView::viewChanged);
     refresh();
 }
 
 DocumentView::~DocumentView() {
+    endTemporaryHand();
     if (tool_) {
         tool_->deactivate();
     }
@@ -63,9 +67,12 @@ void DocumentView::clearPreview() {
 
 void DocumentView::reportError(const QString &message) { emit errorReported(message); }
 
+void DocumentView::setCanvasCursor(const QCursor &cursor) { surface_->widget()->setCursor(cursor); }
+
 void DocumentView::onRevisionChanged() {
     // A committed stroke replaces its preview; an interaction in progress keeps showing its own preview.
-    if (preview_ && !(tool_ && tool_->isInteracting()) &&
+    const Tool *active = effectiveTool();
+    if (preview_ && !(active != nullptr && active->isInteracting()) &&
         session_.revision()->sequence > previewBaseRevision_) {
         preview_.reset();
     }
@@ -78,12 +85,46 @@ void DocumentView::refresh() {
 }
 
 void DocumentView::setTool(std::unique_ptr<Tool> tool) {
+    endTemporaryHand();
     if (tool_) {
         tool_->deactivate();
     }
     tool_ = std::move(tool);
     if (tool_) {
         tool_->activate(*this);
+    } else {
+        setCanvasCursor(Qt::ArrowCursor);
+    }
+}
+
+void DocumentView::suspendInteraction() {
+    endTemporaryHand();
+    if (tool_ && tool_->isInteracting()) {
+        tool_->suspend();
+    }
+}
+
+void DocumentView::beginTemporaryHand() {
+    if (temporary_) {
+        return;
+    }
+    if (tool_) {
+        tool_->suspend();
+    }
+    temporary_ = std::make_unique<HandTool>();
+    temporary_->activate(*this);
+}
+
+void DocumentView::endTemporaryHand() {
+    if (!temporary_) {
+        return;
+    }
+    temporary_->deactivate();
+    temporary_.reset();
+    if (tool_) {
+        tool_->resume();
+    } else {
+        setCanvasCursor(Qt::ArrowCursor);
     }
 }
 
@@ -101,11 +142,42 @@ void DocumentView::fitToView() {
         24.0 * dpr));
 }
 
+void DocumentView::actualPixels() {
+    const QSize device = surface_->deviceSize();
+    if (device.isEmpty()) {
+        return;
+    }
+    viewInitialized_ = true;
+    const render::ViewTransform &view = surface_->viewTransform();
+    const base::DPoint center{device.width() / 2.0, device.height() / 2.0};
+    surface_->setViewTransform(render::ViewTransform::actualPixels(
+        view.deviceToDocument(center),
+        render::DSize{static_cast<double>(device.width()), static_cast<double>(device.height())},
+        surface_->devicePixelRatio()));
+}
+
+void DocumentView::zoomBy(double factor) {
+    const QSize device = surface_->deviceSize();
+    if (device.isEmpty()) {
+        return;
+    }
+    viewInitialized_ = true;
+    const render::ViewTransform &view = surface_->viewTransform();
+    surface_->setViewTransform(
+        view.zoomedAbout(view.scale() * factor, base::DPoint{device.width() / 2.0, device.height() / 2.0}));
+}
+
 bool DocumentView::canvasEvent(canvas::CanvasSurface &surface, QEvent *event) {
     const std::int64_t received = canvas::LatencyTrace::nowNs();
     if (const auto sample = input::InputMapper::pointerSample(*event, surface.viewTransform(), received)) {
         surface.latency().markEnqueued(canvas::LatencyTrace::nowNs());
-        return tool_ != nullptr && tool_->pointer(*sample);
+        emit pointerMoved(sample->posDocument.x, sample->posDocument.y);
+        Tool *active = effectiveTool();
+        return active != nullptr && active->pointer(*sample);
+    }
+    if (event->type() == QEvent::Leave) {
+        emit pointerLeft();
+        return false;
     }
     if (const auto navigation = input::InputMapper::navigation(*event, surface.viewTransform())) {
         const render::ViewTransform &view = surface.viewTransform();
@@ -116,24 +188,48 @@ bool DocumentView::canvasEvent(canvas::CanvasSurface &surface, QEvent *event) {
         viewInitialized_ = true;
         return true;
     }
-    if (event->type() == QEvent::KeyPress && tool_ != nullptr && tool_->isInteracting()) {
+    if (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease) {
         const auto *key = static_cast<QKeyEvent *>(event);
-        if (key->key() == Qt::Key_Escape) {
-            tool_->cancel();
+        const bool press = event->type() == QEvent::KeyPress;
+        if (key->key() == Qt::Key_Space && key->modifiers() == Qt::NoModifier) {
+            if (!key->isAutoRepeat()) {
+                if (press && !(tool_ && tool_->isInteracting())) {
+                    beginTemporaryHand();
+                } else if (!press) {
+                    endTemporaryHand();
+                }
+            }
+            return true; // Space over the canvas is the temporary hand, repeats included
+        }
+        if (!press) {
+            return false;
+        }
+        if (key->key() == Qt::Key_Tab && key->modifiers() == Qt::NoModifier) {
+            emit panelsToggleRequested();
             return true;
         }
-        if (key->key() == Qt::Key_Return || key->key() == Qt::Key_Enter) {
-            tool_->commit();
-            return true;
+        Tool *active = effectiveTool();
+        if (active != nullptr && active->isInteracting()) {
+            if (key->key() == Qt::Key_Escape) {
+                active->cancel();
+                return true;
+            }
+            if (key->key() == Qt::Key_Return || key->key() == Qt::Key_Enter) {
+                active->commit();
+                return true;
+            }
         }
     }
     return false;
 }
 
 bool DocumentView::eventFilter(QObject *watched, QEvent *event) {
-    if (watched == surface_->widget() && event->type() == QEvent::FocusOut && tool_ != nullptr &&
-        tool_->isInteracting()) {
-        tool_->commit(); // spec §16.3: an interrupted stroke keeps what was drawn
+    if (watched == surface_->widget() && event->type() == QEvent::FocusOut) {
+        // Spec §16.3: an interrupted interaction keeps what was drawn; the Space release goes elsewhere.
+        endTemporaryHand();
+        if (tool_ != nullptr && tool_->isInteracting()) {
+            tool_->commit();
+        }
     }
     return QWidget::eventFilter(watched, event);
 }

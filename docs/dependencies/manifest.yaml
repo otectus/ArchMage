@@ -48,7 +48,7 @@ dependencies:
   - id: qt6-svg
     name: "Qt SVG module"
     category: library
-    usage: found_not_linked
+    usage: runtime
     lookups: []
     source: {type: system_package, package: qt6-svg, repository: cachyos-extra-v3, upstream: "https://www.qt.io"}
     version: "6.12.0-1.1"
@@ -57,7 +57,7 @@ dependencies:
     license: ["GPL-3.0-only", "LGPL-3.0-only", "LicenseRef-Qt-Commercial", "Qt-GPL-exception-1.0"]
     redistribution: "If distributed, use the LGPL-3.0 option: link dynamically, ship the license texts and notices, provide or offer the corresponding Qt source, and let users replace the Qt libraries. A Qt commercial license is the alternative."
     maintenance: "maintained; distribution package built 2026-10-07"
-    affects: ["original SVG tool and panel icons (S1-7.8, D-28)"]
+    affects: ["original SVG tool and panel icons (S1-7.8, D-28): the SVG icon engine plugin loads them at run time"]
     notes: "Covered by the find_package(Qt6) lookup claimed by qt6-base."
 
   - id: sqlite

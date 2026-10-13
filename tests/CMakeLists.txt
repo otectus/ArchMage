@@ -30,10 +30,11 @@ function(archmage_add_test name)
         set_target_properties(${name} PROPERTIES AUTOMOC ON)
         add_test(NAME ${name} COMMAND ${name})
         # Desktop theming from the developer's session must not leak in: a platform theme such
-        # as qt6ct initializes GTK, which aborts when no display exists.
+        # as qt6ct initializes GTK, which aborts when no display exists. The shell's recovery
+        # journals go to the build tree, never to the developer's state directory.
         set_tests_properties(${name} PROPERTIES
             LABELS "${ARG_LABELS}"
-            ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;QT_QPA_PLATFORMTHEME=unset:;QT_STYLE_OVERRIDE=unset:")
+            ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;QT_QPA_PLATFORMTHEME=unset:;QT_STYLE_OVERRIDE=unset:;XDG_STATE_HOME=set:${CMAKE_BINARY_DIR}/test-state")
         if(ARG_ENVIRONMENT)
             set_tests_properties(${name} PROPERTIES ENVIRONMENT "${ARG_ENVIRONMENT}")
         endif()
