@@ -26,6 +26,7 @@ include(CompilerWarnings)
 include(Sanitizers)
 include(Dependencies)
 include(ArchMageModules)
+include(ArchMageShaders)
 
 add_subdirectory(core)
 add_subdirectory(io)

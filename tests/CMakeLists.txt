@@ -59,8 +59,25 @@ archmage_add_test(VersionTest
     LINKS archmage_core)
 target_compile_definitions(VersionTest PRIVATE ARCHMAGE_EXPECTED_VERSION="${PROJECT_VERSION}")
 
+archmage_add_test(ViewTransformTest
+    SOURCES core/ViewTransformTest.cpp
+    LABELS math
+    LINKS archmage_render)
+
 archmage_add_test(SmokeTest
     SOURCES ui/SmokeTest.cpp
+    LABELS ui
+    LINKS archmage_ui
+    QT)
+
+archmage_add_test(InputMapperTest
+    SOURCES ui/InputMapperTest.cpp
+    LABELS ui
+    LINKS archmage_ui
+    QT)
+
+archmage_add_test(CanvasSurfaceTest
+    SOURCES ui/CanvasSurfaceTest.cpp
     LABELS ui
     LINKS archmage_ui
     QT)

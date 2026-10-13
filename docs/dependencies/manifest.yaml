@@ -489,3 +489,74 @@ dependencies:
     maintenance: "maintained; distribution package built 2026-10-07"
     affects: []
     notes: "Installed in S1-0.1 as the plan required, but ArchMage does not need it: the client-side Wayland platform plugin and the Qt6WaylandClient CMake package ship in qt6-base (pacman -Qo /usr/lib/qt6/plugins/platforms/libqwayland.so: qt6-base 6.12.0-2.1). This package installs the Qt6WaylandCompositor libraries (pacman -Ql qt6-wayland). Candidate for removal from the prerequisites."
+
+  - id: qt6-shadertools
+    name: "Qt Shader Tools (qsb)"
+    category: build_tool
+    usage: build_time
+    lookups: []
+    source: {type: system_package, package: qt6-shadertools, repository: cachyos-extra-v3, upstream: "https://www.qt.io"}
+    version: "6.12.0-1.1"
+    checksum: sha256:18667ade69d7b3719aebab8a6b0dd78eb281f9267febe18e5d41a9b180d23007
+    build_options: "Distribution build; requested as the ShaderTools component of find_package(Qt6); qt_add_shaders runs qsb at build time"
+    license: ["GPL-3.0-only", "LGPL-3.0-only", "LicenseRef-Qt-Commercial", "Qt-GPL-exception-1.0"]
+    redistribution: "Build tool only; its output (.qsb shader packages) is compiled into ArchMage and carries no license obligation of its own."
+    maintenance: "maintained; distribution package built 2026-10-07"
+    affects: ["QRhiWidget canvas candidate shaders (S1-1, ui/shaders, ADR-0011)"]
+    notes: "Covered by the find_package(Qt6) lookup claimed by qt6-base. The same find_package call requests GuiPrivate (QRhi headers), which qt6-base ships."
+
+  - id: grim
+    name: "grim (Wayland screenshot tool)"
+    category: development_tool
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: grim, repository: cachyos-extra-v3, upstream: "https://gitlab.freedesktop.org/emersion/grim"}
+    version: "1.5.0-2.1"
+    checksum: sha256:9d5815bd06c17a6d6df811aa7f5a879aad6fd3772c50ce0dd0a19afbd9297c5a
+    build_options: "Distribution build"
+    license: ["MIT"]
+    redistribution: "Experiment scripts only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2025-08-05"
+    affects: ["canvas adapter evidence matrix (scripts/experiments/canvas_matrix.py, S1-1)"]
+
+  - id: python-numpy
+    name: "NumPy"
+    category: development_tool
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: python-numpy, repository: cachyos-extra-v3, upstream: "https://www.numpy.org"}
+    version: "2.5.4-1.1"
+    checksum: sha256:fad84e099d80bb7b147ba418537a384a1ec55775f42e58b587a982d9c9b2af24
+    build_options: "Distribution build"
+    license: ["custom"]
+    redistribution: "Experiment scripts only; not distributed with ArchMage. Upstream license is BSD-3-Clause."
+    maintenance: "maintained; distribution package built 2026-10-11"
+    affects: ["screenshot comparison in the canvas adapter evidence matrix (S1-1)"]
+
+  - id: python-pillow
+    name: "Pillow"
+    category: development_tool
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: python-pillow, repository: extra, upstream: "https://pillow.readthedocs.io"}
+    version: "12.3.0-1"
+    checksum: sha256:623cbe9a6f99f4bb7fbeda45382514637988e1a90814b87c44670b669899573e
+    build_options: "Distribution build"
+    license: ["MIT-CMU"]
+    redistribution: "Experiment scripts only; not distributed with ArchMage."
+    maintenance: "maintained; distribution package built 2026-07-01"
+    affects: ["screenshot decoding and cropping in the canvas adapter evidence matrix (S1-1)"]
+
+  - id: hyprland
+    name: "Hyprland (Wayland compositor)"
+    category: runtime_component
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: hyprland, repository: cachyos-extra-v3, upstream: "https://github.com/hyprwm/Hyprland"}
+    version: "0.56.2-4.1"
+    checksum: sha256:09892e6220efc469d7f757f3e5713b35028ee5e2759aee14e93367d9e37c954e
+    build_options: "Distribution build; the user's session compositor with a Lua configuration; xwayland.force_zero_scaling is true in that configuration"
+    license: ["BSD-3-Clause"]
+    redistribution: "Not distributed; the compositor ArchMage is validated against (spec §5.1, §26.4)."
+    maintenance: "maintained; distribution package built 2026-10-03"
+    affects: ["canvas adapter evidence matrix (headless outputs, window rules, hyprctl dispatch; S1-1)", "manual Wayland checks"]
