@@ -128,6 +128,7 @@ const CommandRegistry &CommandRegistry::builtIn() {
     static const CommandRegistry registry = [] {
         CommandRegistry r;
         registerLayerCommands(r);
+        registerRasterCommands(r);
         return r;
     }();
     return registry;
