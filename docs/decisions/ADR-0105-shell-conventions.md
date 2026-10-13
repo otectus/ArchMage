@@ -74,4 +74,5 @@ Recovery:
 
 ## Evidence
 
-`tests/ui/ShellTest.cpp`, `NavigationTest.cpp`, `LayersPanelTest.cpp`, `ColorPanelTest.cpp` (S1-7).
+`tests/ui/ShellTest.cpp`, `NavigationTest.cpp`, `LayersPanelTest.cpp`, `ColorPanelTest.cpp`,
+`ShellPromptsTest.cpp` (S1-7).
