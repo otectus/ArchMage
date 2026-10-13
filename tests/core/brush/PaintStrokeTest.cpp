@@ -110,7 +110,8 @@ TEST(PaintStroke, FlatOpacityDoesNotBuildUpWhereDabsOverlap) {
     settings.spacing = 0.05; // heavily overlapping dabs
     settings.opacity = 0.5;
     const auto layer = paintLayer(*doc.layers[0], settings, diagonal({20, 64}, {108, 64}, 40));
-    const auto tile = layer->content->tiles.at({0, 0});
+    ASSERT_TRUE(layer);
+    const auto tile = (*layer)->content->tiles.at({0, 0});
     // Fully covered pixels: white mixed with black at exactly 50 %, wherever dabs overlap.
     EXPECT_NEAR(tile->sample(0, 64, 64), 0.5f, 1.0f / 255.0f);
     EXPECT_EQ(tile->sample(0, 64, 64), tile->sample(0, 30, 64));
@@ -124,7 +125,8 @@ TEST(PaintStroke, EraseLowersAlphaAndKeepsTheStoredColor) {
     settings.size = 20.0;
     settings.hardness = 1.0;
     const auto layer = paintLayer(*doc.layers[0], settings, {{{{64.0, 64.0}, 1.0f}}});
-    const auto tile = layer->content->tiles.at({0, 0});
+    ASSERT_TRUE(layer);
+    const auto tile = (*layer)->content->tiles.at({0, 0});
     EXPECT_EQ(tile->sample(3, 64, 64), 0.0f);
     EXPECT_EQ(tile->sample(0, 64, 64), 1.0f) << "hidden color under zero alpha is preserved (D-09)";
     EXPECT_EQ(tile->sample(3, 100, 100), 1.0f);

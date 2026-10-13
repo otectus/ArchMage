@@ -201,9 +201,13 @@ const tiles::TileBuffer *StrokeMask::tile(tiles::TileCoord coord) const {
     return it == tiles_.end() ? nullptr : it->second.get();
 }
 
-std::shared_ptr<const tiles::Tile> applyStrokeToTile(const tiles::Tile &base, const tiles::TileBuffer &mask,
-                                                     const BrushSettings &settings) {
-    tiles::TileBuffer out(base);
+base::Result<std::shared_ptr<const tiles::Tile>>
+applyStrokeToTile(const tiles::Tile &base, const tiles::TileBuffer &mask, const BrushSettings &settings) {
+    auto copied = tiles::TileBuffer::copyOf(base);
+    if (!copied) {
+        return base::unexpected(std::move(copied).error());
+    }
+    tiles::TileBuffer &out = *copied;
     const tiles::SampleType type = out.sampleType();
     const std::size_t bytes = tiles::bytesPerSample(type);
     const std::span<const std::byte> coverageBytes = mask.plane(0);
@@ -232,9 +236,10 @@ std::shared_ptr<const tiles::Tile> applyStrokeToTile(const tiles::Tile &base, co
     return std::move(out).seal();
 }
 
-std::shared_ptr<const document::Layer> paintLayer(const document::Layer &layer, const BrushSettings &settings,
-                                                  std::span<const StrokeSample> samples,
-                                                  std::size_t *dabCount) {
+base::Result<std::shared_ptr<const document::Layer>> paintLayer(const document::Layer &layer,
+                                                                const BrushSettings &settings,
+                                                                std::span<const StrokeSample> samples,
+                                                                std::size_t *dabCount) {
     StrokeResampler resampler(settings);
     std::vector<Dab> dabs;
     for (const StrokeSample &sample : samples) {
@@ -250,7 +255,11 @@ std::shared_ptr<const document::Layer> paintLayer(const document::Layer &layer, 
     }
     tiles::TileMap map = layer.content->tiles;
     for (const tiles::TileCoord coord : dirty.tiles()) {
-        map.set(coord, applyStrokeToTile(*map.at(coord), *mask.tile(coord), settings));
+        auto tile = applyStrokeToTile(*map.at(coord), *mask.tile(coord), settings);
+        if (!tile) {
+            return base::unexpected(std::move(tile).error());
+        }
+        map.set(coord, std::move(*tile));
     }
     if (dabCount != nullptr) {
         *dabCount = dabs.size();
@@ -258,7 +267,7 @@ std::shared_ptr<const document::Layer> paintLayer(const document::Layer &layer, 
     auto painted = std::make_shared<document::Layer>(layer);
     painted->content = std::make_shared<const document::RasterContent>(
         document::RasterContent{base::RasterId::generate(), std::move(map)});
-    return painted;
+    return std::shared_ptr<const document::Layer>(std::move(painted));
 }
 
 json samplesToJson(std::span<const StrokeSample> samples) {
@@ -309,6 +318,9 @@ StrokeSession::StrokeSession(std::shared_ptr<const document::DocumentState> base
 }
 
 tiles::DirtyRegion StrokeSession::add(std::span<const StrokeSample> samples) {
+    if (!status_) {
+        return {};
+    }
     const document::Layer &layer = *base_->layers[layerIndex_];
     std::vector<Dab> dabs;
     for (const StrokeSample &sample : samples) {
@@ -329,7 +341,12 @@ tiles::DirtyRegion StrokeSession::add(std::span<const StrokeSample> samples) {
     }
     const tiles::TileMap &original = layer.content->tiles;
     for (const tiles::TileCoord coord : localDirty.tiles()) {
-        content_.set(coord, applyStrokeToTile(*original.at(coord), *mask_.tile(coord), settings_));
+        auto tile = applyStrokeToTile(*original.at(coord), *mask_.tile(coord), settings_);
+        if (!tile) {
+            status_ = base::unexpected(std::move(tile).error());
+            break;
+        }
+        content_.set(coord, std::move(*tile));
         documentDirty.addPixels(tiles::tilePixelRect(coord).translated(layer.offset.x, layer.offset.y));
     }
     auto painted = std::make_shared<document::Layer>(layer);

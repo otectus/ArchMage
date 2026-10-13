@@ -94,13 +94,14 @@ private:
     std::map<tiles::TileCoord, std::unique_ptr<tiles::TileBuffer>> tiles_;
 };
 
-/// The tile a stroke produces from `base` and the stroke's coverage tile.
-[[nodiscard]] std::shared_ptr<const tiles::Tile>
+/// The tile a stroke produces from `base` and the stroke's coverage tile. Fails only when a spooled `base`
+/// cannot be read back from the recovery journal.
+[[nodiscard]] base::Result<std::shared_ptr<const tiles::Tile>>
 applyStrokeToTile(const tiles::Tile &base, const tiles::TileBuffer &mask, const BrushSettings &settings);
 
 /// Paints a whole stroke (samples in document coordinates) onto a layer; the layer's content is replaced
 /// by new content with a new RasterId, the rest is shared.
-[[nodiscard]] std::shared_ptr<const document::Layer> paintLayer(const document::Layer &layer,
+[[nodiscard]] base::Result<std::shared_ptr<const document::Layer>> paintLayer(const document::Layer &layer,
                                                                 const BrushSettings &settings,
                                                                 std::span<const StrokeSample> samples,
                                                                 std::size_t *dabCount = nullptr);
@@ -115,8 +116,10 @@ public:
     StrokeSession(std::shared_ptr<const document::DocumentState> base, base::LayerId layer,
                   BrushSettings settings);
 
-    /// Adds samples; returns the document-space tiles whose pixels changed.
+    /// Adds samples; returns the document-space tiles whose pixels changed. After a failure (a spooled tile
+    /// that cannot be read back) the session stops painting and status() reports it.
     tiles::DirtyRegion add(std::span<const StrokeSample> samples);
+    [[nodiscard]] const base::Status &status() const { return status_; }
 
     [[nodiscard]] std::shared_ptr<const document::DocumentState> preview() const { return preview_; }
     [[nodiscard]] const std::vector<StrokeSample> &samples() const { return samples_; }
@@ -137,6 +140,7 @@ private:
     tiles::TileMap content_; // base content with the stroke applied so far
     std::vector<StrokeSample> samples_;
     std::size_t dabCount_ = 0;
+    base::Status status_;
 };
 
 } // namespace archmage::brush

@@ -104,14 +104,14 @@ TEST(Tile, DenseTilesChargeAndReleaseRam) {
 
 TEST(Tile, VersionsAreUniqueAndBuffersCopy) {
     const auto a = gradientTile();
-    TileBuffer copy(*a);
+    TileBuffer copy = *TileBuffer::copyOf(*a);
     copy.setSample(1, 3, 4, 1.0f);
     const auto b = std::move(copy).seal();
     EXPECT_NE(a->version(), b->version());
     EXPECT_EQ(a->sample(1, 3, 4), 0.0f) << "the source tile is immutable";
     EXPECT_EQ(b->sample(1, 3, 4), 1.0f);
     EXPECT_FALSE(a->sameContent(*b));
-    TileBuffer same(*a);
+    TileBuffer same = *TileBuffer::copyOf(*a);
     EXPECT_TRUE(std::move(same).seal()->sameContent(*a));
 }
 

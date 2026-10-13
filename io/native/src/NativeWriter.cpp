@@ -126,6 +126,14 @@ public:
         const tiles::TileMap &map = content.tiles;
         object(id, kRasterType, kRasterVersion, rasterPayload(map));
         map.forEach([&](tiles::TileCoord coord, const std::shared_ptr<const tiles::Tile> &tile) {
+            if (!status_) {
+                return;
+            }
+            auto pinned = tile->pin(); // spooled tiles are read back from the recovery journal
+            if (!pinned) {
+                status_ = base::unexpected(std::move(pinned).error());
+                return;
+            }
             for (std::size_t p = 0; p < map.layout().planeCount() && status_; ++p) {
                 plane(id, coord, p, *tile, map.layout().sampleBytes());
             }

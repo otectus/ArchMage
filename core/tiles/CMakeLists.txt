@@ -6,5 +6,6 @@ archmage_add_module(tiles
         src/Tile.cpp
         src/TileMap.cpp
         src/ResourceCoordinator.cpp
+        src/TileSpool.cpp
     PUBLIC_LINKS
         archmage_base)
