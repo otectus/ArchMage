@@ -9,8 +9,8 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0, S1-1 and S1-2 (see below). Next: S1-3, brush stroke vertical slice (gate G3).
-- Before starting S1-3, re-run the G2 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+- Completed: S1-0 to S1-3 (see below). Next: S1-4, native format save and reopen (gate G4).
+- Before starting S1-4, re-run the G3 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
   `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image and document tiers.
 - Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
@@ -58,7 +58,7 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | M0-D6 Memory and format experiments | Partly done: tile memory accounting and eviction ordering in S1-2; container and probes pending (S1-4, S1-6) | `TilesTest` (uniform tiles allocate nothing, dense tiles charge RAM, coordinator eviction order) |
 | M0-D7 Test corpus plan | Done in S1-0 | `docs/testing/corpus-plan.md` |
 | M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Done in S1-1, tablet unavailable | ADR-0011 evidence matrix; `docs/decisions/evidence/S1-1/` |
-| M0-E2 Tile compositing, blur halo, profile conversion, brush latency | CPU tile compositing done in S1-2; blur halo, profile conversion experiment and brush latency pending (S1-3, S1-6) | `EvaluatorTest`, `KernelsTest` |
+| M0-E2 Tile compositing, blur halo, profile conversion, brush latency | CPU tile compositing (S1-2) and brush latency (S1-3, synthetic input) done; blur halo and profile conversion experiment pending (S1-6) | `EvaluatorTest`, `KernelsTest`, `benchmarks/results/2026-10-13-brush.json` |
 | M0-E3 Native save, reopen, kill-during-save recovery | Not started (S1-4, S1-5) | |
 | M0-E4 Layered PSD decode probe | Not started (S1-6) | |
 | M0-E5 RAW file, shaped Arabic and Indic text, macOS GPU path | Not started (S1-6) | |
@@ -344,6 +344,84 @@ architecture overview names the real types, and the 10,000-layer snapshot runs i
 - `CpuEvaluator::render` must not be called from one of its own worker threads (it waits on a latch).
 - Executor observers run on the executor thread; UI code must marshal to the GUI thread.
 
-## S1-3 to S1-9
+## S1-3 Brush stroke vertical slice: complete, 2026-10-13
+
+Work on branch `s1-3-brush-slice` (`d835689`, `230f465`, `963cc5e`, `b175b31`), merged to `main` in
+`54c971f`. The G2 checks passed on `337cb92` before work began.
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-3.1 Stroke input and resampling | Automatically tested | `core/brush/Stroke.h` `StrokeResampler`; `BrushTest`: dab positions identical for one-by-one, uneven and whole-stroke batching; spacing follows the diameter; zero pressure still advances |
+| S1-3.2 Round dab | Automatically tested | `dabCoverage`, `dabBounds`; `BrushTest`: bounds, four-way symmetry, hardness extremes, coverage monotonic in diameter, sub-pixel dabs scaled by area |
+| S1-3.3 paintStroke command | Automatically tested | `archmage.raster.paintStroke`; `PaintStrokeTest`: paint, undo and redo byte-exact; one history item per stroke; locked layer rejected; hidden layer allowed with a `layer.hidden` warning; flat opacity where dabs overlap; erase keeps the stored color |
+| S1-3.4 Preview transaction | Automatically tested | `StrokeSession`; `PaintStrokeTest`: the preview equals the committed stroke tile for tile; cancelling leaves the revision unchanged and allocates no committed tile |
+| S1-3.5 Canvas wiring | Automatically tested (offscreen and native Wayland) | `DocumentSession`, `DocumentFrameSource`, `Tool`, `BrushTool`, `DocumentView`, interim `MainWindow`; `BrushSliceTest`: a drag through the real canvas widget shows a preview, commits one "Brush Stroke" history item, puts black pixels in the presented frame and undoes; Escape cancels; a locked layer reports an error; focus loss commits. Passes offscreen (`scripts/check-ui.sh`) and on native Wayland (`python3 -I scripts/experiments/wayland_run.py --class '^BrushSliceTest$' -- ./build/dev-debug/tests/BrushSliceTest`: 6 passed). A display-cache eviction test covers shared content keys and eviction within one frame |
+| S1-3.6 AT-002 | Automatically tested | `PaintStrokeTest` `AT002.StrokeUndoRedoAtTileBoundaries`: a stroke across four tile corners on a layer at (−37, 59), ten undo/redo cycles byte-exact against the pre- and post-stroke composites, bit-for-bit replay from the recorded envelope (no seed), and every pixel within two pixels of a tile border equal to an untiled rasterization (more than 10,000 pixels checked); passes under `dev-debug` and `asan-ubsan` |
+| S1-3.7 Latency measurement | Recorded | `benchmarks/results/2026-10-13-brush.json` (built at `963cc5e`): p50 2.49 ms, p95 3.19 ms, max 12.78 ms over 2,480 frames of synthetic tablet input on a 4096² RGBA8 canvas, offscreen; pass against p95 ≤ 25 ms |
+
+### Exit gate G3
+
+Met, with one substitution: AT-002 passes under `dev-debug` and `asan-ubsan`, and the latency record is
+committed. The plan's manual stroke with undo and redo on the real canvas was not done by a person;
+`BrushSliceTest` drives the same canvas widget with synthetic events on native Wayland instead. A hand-drawn
+stroke is part of the S1-9 manual demonstration.
+
+### Commands and results (on `54c971f`, 2026-10-13)
+
+| Command | Result |
+| --- | --- |
+| `scripts/check.sh` | exit 0; 113/113 non-UI tests; manifest and ledger checks pass |
+| `scripts/check-ui.sh` | exit 0; 4/4 |
+| `scripts/check-sanitizers.sh` | exit 0; 117/117 including AT-002; 0 compiler warnings |
+| `cmake --build --preset tsan && ctest --preset tsan -L "operation\|image\|document"` | 51/51, no ThreadSanitizer reports |
+| `python3 -I scripts/experiments/wayland_run.py --class '^BrushSliceTest$' -- ./build/dev-debug/tests/BrushSliceTest` | 6 passed on native Wayland; workspace and cursor restored |
+| `python3 -I scripts/benchmarks/brush_latency.py --seconds 10` (three runs before the record, one for it) | p95 3.07 to 3.21 ms; no failure |
+
+### Deviations from the plan
+
+1. Render cache keys became per region (`GraphNode::cacheKey(region)`, built from source tile versions)
+   so a stroke re-renders only the tiles it touches; the canvas caches 8-bit display tiles by content key.
+2. Stroke previews use `StrokeSession` outside the executor rather than an executor transaction: the mask
+   must accumulate over the whole stroke for flat opacity, so the command recomputes the stroke from its
+   samples, which also makes replay exact.
+3. The interim `MainWindow` (one 2048² document, the brush, Edit > Undo and Redo) stands until S1-7.
+4. The synthetic input rate is 248 Hz (millisecond timer resolution), not 240 Hz.
+5. The latency benchmark runs on the offscreen platform, which measures the spec's CPU event-to-submission
+   boundary; photon latency on a compositor is not measured.
+6. Focus loss commits an interrupted stroke and Escape cancels it (the rule spec §16.3 asks to document).
+7. New `scripts/experiments/wayland_run.py` runs any Qt program's windows on a temporary headless output.
+
+### Progress report (plan §8.2)
+
+#### S1-3 Brush stroke vertical slice, 2026-10-13
+
+- **Implemented outcomes:** a round brush and eraser with pressure-controlled size, flat stroke opacity,
+  deterministic resampling, live preview and one history item per stroke; a document canvas that
+  re-renders only changed tiles; undo and redo in the interim window; a latency benchmark.
+- **Changed modules:** `core/brush` (new code), `core/commands` (`paintStroke`, completion callbacks),
+  `core/render` (per-region keys, `renderTiles`), `ui` (document session, frame source, tools, document
+  view, main window, benchmark), `apps/archmage` (`--benchmark`), `scripts`.
+- **Passing evidence (commands and result paths):** the table above.
+- **Manual validation (what, how, platform):** none by a person; scripted canvas runs offscreen and on
+  native Wayland (Hyprland headless output).
+- **Performance changes (benchmark result file):** `benchmarks/results/2026-10-13-brush.json`: brush
+  preview p95 3.19 ms against the 25 ms budget.
+- **Migrations:** none.
+- **Dependency changes (manifest diff):** none.
+- **Open risks:** zoomed-out views sample full-resolution tiles (no mip levels yet), so the first frame of
+  a large document at fit zoom evaluates every tile; no tablet to verify real pressure input (Q-03).
+- **State by behavior:** brush, eraser, preview, undo and redo automatically tested; nothing manually
+  tested by a person or verified against a benchmark product.
+- **Sample document:** none; samples start in S1-4.
+
+### Notes for the next session
+
+- Qt defines `slots`, `signals` and `emit` as macros in Qt code; do not use them as identifiers.
+- When a scripted replacement edits code, assert that the anchor text exists: clang-format rewraps
+  lines, and a silent miss cost two debugging rounds in S1-2 and S1-3.
+
+## S1-4 to S1-9
 
 Not started.
