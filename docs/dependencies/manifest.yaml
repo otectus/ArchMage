@@ -53,7 +53,7 @@ dependencies:
   - id: sqlite
     name: "SQLite"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:SQLite3]
     source: {type: system_package, package: sqlite, repository: cachyos-v3, upstream: "https://www.sqlite.org/"}
     version: "3.53.4-1"
@@ -67,7 +67,7 @@ dependencies:
   - id: zstd
     name: "Zstandard"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:zstd]
     source: {type: system_package, package: zstd, repository: cachyos-v3, upstream: "https://facebook.github.io/zstd/"}
     version: "1.5.7-2"

@@ -1,0 +1,145 @@
+{
+  "documentId": "doc-05H3PFH77PTTTT0E2NP37G8HAN",
+  "height": 200,
+  "layers": [
+    {
+      "id": "layer-500292Y354T31ARWE56CGDT8E5",
+      "locked": true,
+      "name": "Background",
+      "offset": [
+        0,
+        0
+      ],
+      "opacity": 1.0,
+      "raster": "raster-3FXTR94VQYBCE5E0YCWR19PF3T",
+      "visible": true
+    },
+    {
+      "id": "layer-743MAQ44X72RWD0VR8J26G6XZW",
+      "locked": false,
+      "name": "Ink",
+      "offset": [
+        0,
+        0
+      ],
+      "opacity": 1.0,
+      "raster": "raster-753BCHJW77492ZNBJ3EJHB5Z2Y",
+      "visible": true
+    },
+    {
+      "id": "layer-1BJFB5KJXAZFZMYSAFBGJNV63F",
+      "locked": false,
+      "name": "Ink instance",
+      "offset": [
+        0,
+        0
+      ],
+      "opacity": 1.0,
+      "raster": "raster-753BCHJW77492ZNBJ3EJHB5Z2Y",
+      "visible": false
+    },
+    {
+      "id": "layer-3TYTB393YAG1NKKWTZMTA8NNGY",
+      "locked": false,
+      "name": "Glaze",
+      "offset": [
+        17,
+        -9
+      ],
+      "opacity": 0.5,
+      "raster": "raster-4R7PZTX8HGVARW84JS1KP6EN4Q",
+      "visible": true
+    }
+  ],
+  "profileHash": "de05479fb002967858d579f9aced8b6c6004e8542c8406fdf26e2d4ef304f656",
+  "revisionId": "rev-6TQN78YQ5HATXMXAS172HADWEB",
+  "sampleType": "uint8",
+  "samples": [
+    {
+      "rgba": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "x": 0,
+      "y": 0
+    },
+    {
+      "rgba": [
+        26,
+        51,
+        179,
+        255
+      ],
+      "x": 20,
+      "y": 30
+    },
+    {
+      "rgba": [
+        128,
+        102,
+        103,
+        255
+      ],
+      "x": 160,
+      "y": 100
+    },
+    {
+      "rgba": [
+        26,
+        51,
+        179,
+        255
+      ],
+      "x": 300,
+      "y": 170
+    },
+    {
+      "rgba": [
+        128,
+        102,
+        103,
+        255
+      ],
+      "x": 150,
+      "y": 95
+    },
+    {
+      "rgba": [
+        243,
+        204,
+        141,
+        255
+      ],
+      "x": 299,
+      "y": 20
+    },
+    {
+      "rgba": [
+        243,
+        204,
+        141,
+        255
+      ],
+      "x": 48,
+      "y": 171
+    },
+    {
+      "rgba": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "x": 319,
+      "y": 199
+    }
+  ],
+  "schema": {
+    "major": 0,
+    "minor": 1
+  },
+  "title": "Fixture 0.1",
+  "width": 320
+}
