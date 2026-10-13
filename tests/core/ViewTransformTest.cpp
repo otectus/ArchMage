@@ -11,11 +11,11 @@
 namespace archmage::render {
 namespace {
 
-using tiles::DPoint;
-using tiles::DRect;
-using tiles::DSize;
-using tiles::IPoint;
-using tiles::IRect;
+using base::DPoint;
+using base::DRect;
+using base::DSize;
+using base::IPoint;
+using base::IRect;
 
 bool near(double a, double b, double tolerance = 1e-9) {
     return std::abs(a - b) <= tolerance * std::max(1.0, std::abs(a));
@@ -124,9 +124,9 @@ TEST(ViewTransform, VisibleDocumentRect) {
 }
 
 TEST(Geometry, PixelCenterConvention) {
-    EXPECT_EQ(tiles::pixelAt(DPoint{-0.5, 0.0}), (IPoint{-1, 0}));
-    EXPECT_EQ(tiles::pixelAt(DPoint{0.999, -1.0}), (IPoint{0, -1}));
-    EXPECT_EQ(tiles::pixelCenter(IPoint{0, -3}), (DPoint{0.5, -2.5}));
+    EXPECT_EQ(base::pixelAt(DPoint{-0.5, 0.0}), (IPoint{-1, 0}));
+    EXPECT_EQ(base::pixelAt(DPoint{0.999, -1.0}), (IPoint{0, -1}));
+    EXPECT_EQ(base::pixelCenter(IPoint{0, -3}), (DPoint{0.5, -2.5}));
     EXPECT_EQ((DRect{-0.5, 0.25, 2.0, 1.0}.coveringPixels()), (IRect{-1, 0, 2, 2}));
     EXPECT_TRUE((DRect{0, 0, 0, 5}.coveringPixels().empty()));
 }

@@ -59,6 +59,49 @@ archmage_add_test(VersionTest
     LINKS archmage_core)
 target_compile_definitions(VersionTest PRIVATE ARCHMAGE_EXPECTED_VERSION="${PROJECT_VERSION}")
 
+archmage_add_test(BaseTest
+    SOURCES
+        core/base/ExpectedTest.cpp
+        core/base/IdTest.cpp
+        core/base/GeometryTest.cpp
+    LABELS math
+    LINKS archmage_base)
+
+archmage_add_test(TilesTest
+    SOURCES core/tiles/TilesTest.cpp
+    LABELS math
+    LINKS archmage_tiles)
+
+archmage_add_test(ColorTest
+    SOURCES core/color/ColorTest.cpp
+    LABELS math
+    LINKS archmage_color LCMS2::LCMS2)
+
+archmage_add_test(DocumentTest
+    SOURCES core/document/DocumentTest.cpp
+    LABELS document
+    LINKS archmage_document)
+
+archmage_add_test(KernelsTest
+    SOURCES core/render/KernelsTest.cpp
+    LABELS math
+    LINKS archmage_render)
+
+archmage_add_test(EvaluatorTest
+    SOURCES core/render/EvaluatorTest.cpp
+    LABELS image
+    LINKS archmage_render)
+
+archmage_add_test(CommandsTest
+    SOURCES core/commands/CommandsTest.cpp
+    LABELS operation
+    LINKS archmage_commands)
+
+archmage_add_test(ExecutorTest
+    SOURCES core/commands/ExecutorTest.cpp
+    LABELS operation
+    LINKS archmage_commands)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math

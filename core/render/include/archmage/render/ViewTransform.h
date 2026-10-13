@@ -14,13 +14,13 @@
 // Ownership and thread safety: an immutable value type; safe to copy between threads.
 #pragma once
 
-#include "archmage/tiles/Geometry.h"
+#include "archmage/base/Geometry.h"
 
 namespace archmage::render {
 
-using tiles::DPoint;
-using tiles::DRect;
-using tiles::DSize;
+using base::DPoint;
+using base::DRect;
+using base::DSize;
 
 class ViewTransform {
 public:

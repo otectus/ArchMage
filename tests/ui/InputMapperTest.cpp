@@ -11,8 +11,8 @@
 
 #include <cmath>
 
+using archmage::base::DPoint;
 using archmage::render::ViewTransform;
-using archmage::tiles::DPoint;
 using archmage::ui::input::InputMapper;
 using archmage::ui::input::NavigationRequest;
 using archmage::ui::input::PointerDevice;

@@ -1,7 +1,14 @@
-# Document graph, revisions, resource references, invariants (spec §5.5). S1-0 holds only
-# the generated Version.h; IDs, revisions and errors arrive in S1-2.
+# Document graph, revisions, resource references, invariants (spec §5.5). The generated Version.h
+# and, from S1-2, the document model.
 archmage_add_module(document
-    SOURCES src/Version.cpp)
+    SOURCES
+        src/Version.cpp
+        src/Document.cpp
+    PUBLIC_LINKS
+        archmage_base
+        archmage_tiles
+        archmage_color
+        nlohmann_json::nlohmann_json)
 
 # Version.h is rendered into the build tree from Version.h.in: once at configure time so it
 # exists before the first build, then before every build to pick up a new git revision.
