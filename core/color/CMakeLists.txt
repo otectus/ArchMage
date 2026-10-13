@@ -1,3 +1,10 @@
-# Profiles, conversions, view transforms, proofing (spec §5.5).
-# Source-less until S1-2 adds the color pipeline skeleton (D-10).
-archmage_add_module(color)
+# Profiles, conversions, view transforms, proofing (spec §5.5; D-10). Stage 1: ICC profiles through
+# Little CMS, the named pipeline and the document color policy.
+archmage_add_module(color
+    SOURCES
+        src/ColorProfile.cpp
+        src/ColorPipeline.cpp
+    PUBLIC_LINKS
+        archmage_base
+    PRIVATE_LINKS
+        LCMS2::LCMS2)
