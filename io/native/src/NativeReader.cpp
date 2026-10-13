@@ -326,6 +326,42 @@ struct ObjectRow {
     std::string payload;
 };
 
+// Spec §6.2: no containment cycles. Returns one edge of a cycle among `relations`, if there is one.
+std::optional<std::string> findCycle(const std::vector<document::PreservedContent::Relation> &relations) {
+    std::unordered_map<std::string, std::vector<std::string>> children;
+    for (const auto &relation : relations) {
+        children[relation.parent].push_back(relation.child);
+    }
+    enum : std::uint8_t { kUnseen, kOnPath, kDone };
+    std::unordered_map<std::string, std::uint8_t> state;
+    for (const auto &[start, unused] : children) {
+        if (state[start] != kUnseen) {
+            continue;
+        }
+        std::vector<std::pair<std::string, std::size_t>> path{{start, 0}};
+        state[start] = kOnPath;
+        while (!path.empty()) {
+            const std::string node = path.back().first;
+            const auto next = children.find(node);
+            if (next == children.end() || path.back().second >= next->second.size()) {
+                state[node] = kDone;
+                path.pop_back();
+                continue;
+            }
+            const std::string child = next->second[path.back().second++];
+            const std::uint8_t seen = state[child];
+            if (seen == kOnPath) {
+                return node + " -> " + child;
+            }
+            if (seen == kUnseen) {
+                state[child] = kOnPath;
+                path.emplace_back(child, 0);
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 // Builds a document state from the tables; collects what it does not understand into `preserved`.
 class StateLoader {
 public:
@@ -339,6 +375,9 @@ public:
         }
         if (auto status = loadRelations(); !status) {
             return fail(status.error());
+        }
+        if (const auto cycle = findCycle(relations_)) {
+            return fail(damaged("file.cyclic_relation", *cycle));
         }
         auto resources = prepare(db_, kResourceQuery);
         if (!resources) {
@@ -947,6 +986,12 @@ base::Result<ValidationReport> validateFile(const std::filesystem::path &path, V
           [&](Statement &s) { problem(damaged("file.missing_resource", "preview " + s.text(0) + " " + s.text(1))); });
     query("SELECT id FROM revisions WHERE root NOT IN (SELECT id FROM objects) LIMIT 50",
           [&](Statement &s) { problem(damaged("file.dangling_reference", "revision root of " + s.text(0))); });
+    std::vector<document::PreservedContent::Relation> relations;
+    query("SELECT parent, kind, ordinal, child FROM relations",
+          [&](Statement &s) { relations.push_back({s.text(0), s.text(1), s.integer(2), s.text(3)}); });
+    if (const auto cycle = findCycle(relations)) {
+        problem(damaged("file.cyclic_relation", *cycle));
+    }
 
     if (open->info.readOnlyReason == "capability.unknown") {
         report.notes.push_back("the document uses capabilities this version does not know: its content was not "

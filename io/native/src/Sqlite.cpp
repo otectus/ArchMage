@@ -4,6 +4,8 @@
 
 #include <sqlite3.h>
 
+#include <cerrno>
+#include <cstring>
 #include <utility>
 
 namespace archmage::native {
@@ -11,7 +13,9 @@ namespace {
 
 using base::ErrorCategory;
 
-base::Error mapError(int code, std::string_view what, std::string detail) {
+// `systemErrno` (sqlite3_system_errno) refines I/O failures: a full disk, a quota or a file-size limit is
+// resource exhaustion whatever SQLite's own code says.
+base::Error mapError(int code, std::string_view what, std::string detail, int systemErrno = 0) {
     const int primary = code & 0xff;
     ErrorCategory category = ErrorCategory::Internal;
     std::string message = "The document file could not be accessed";
@@ -34,9 +38,14 @@ base::Error mapError(int code, std::string_view what, std::string detail) {
         message = "The document file could not be opened or written";
         break;
     case SQLITE_IOERR:
-        category = (code == SQLITE_IOERR_WRITE || code == SQLITE_IOERR_FSYNC) ? ErrorCategory::ResourceExhausted
-                                                                               : ErrorCategory::Internal;
-        message = "Reading or writing the document file failed";
+        if (systemErrno == ENOSPC || systemErrno == EDQUOT || systemErrno == EFBIG) {
+            category = ErrorCategory::ResourceExhausted;
+            message = "There is not enough disk space";
+        } else {
+            category = (code == SQLITE_IOERR_WRITE || code == SQLITE_IOERR_FSYNC) ? ErrorCategory::ResourceExhausted
+                                                                                   : ErrorCategory::Internal;
+            message = "Reading or writing the document file failed";
+        }
         break;
     case SQLITE_NOMEM:
         category = ErrorCategory::ResourceExhausted;
@@ -49,8 +58,11 @@ base::Error mapError(int code, std::string_view what, std::string detail) {
     default:
         break;
     }
-    return {category, "sqlite." + std::to_string(primary), message,
-            std::string(what) + ": " + sqlite3_errstr(code) + (detail.empty() ? "" : " (" + detail + ")")};
+    std::string text = std::string(what) + ": " + sqlite3_errstr(code) + (detail.empty() ? "" : " (" + detail + ")");
+    if (systemErrno != 0) {
+        text += "; " + std::string(std::strerror(systemErrno));
+    }
+    return {category, "sqlite." + std::to_string(primary), message, std::move(text)};
 }
 
 // Recommended settings for databases from untrusted sources (sqlite.org/security.html).
@@ -109,7 +121,8 @@ Statement &Statement::bindNull(int index) {
 
 void Statement::check(int code, std::string_view what) {
     if (code != SQLITE_OK && status_) {
-        status_ = base::unexpected(mapError(code, what, sql_.substr(0, 80) + ": " + sqlite3_errmsg(db_)));
+        status_ = base::unexpected(
+            mapError(code, what, sql_.substr(0, 80) + ": " + sqlite3_errmsg(db_), sqlite3_system_errno(db_)));
     }
 }
 
@@ -214,7 +227,7 @@ base::Status Database::exec(std::string_view sql) {
     if (code != SQLITE_OK) {
         std::string detail = message != nullptr ? message : "";
         sqlite3_free(message);
-        return base::unexpected(mapError(code, "exec", text.substr(0, 80) + ": " + detail));
+        return base::unexpected(mapError(code, "exec", text.substr(0, 80) + ": " + detail, sqlite3_system_errno(db_)));
     }
     return {};
 }
@@ -223,7 +236,8 @@ base::Result<Statement> Database::prepare(std::string_view sql) {
     sqlite3_stmt *statement = nullptr;
     const int code = sqlite3_prepare_v2(db_, sql.data(), static_cast<int>(sql.size()), &statement, nullptr);
     if (code != SQLITE_OK) {
-        return base::unexpected(mapError(code, "prepare", std::string(sql.substr(0, 80)) + ": " + sqlite3_errmsg(db_)));
+        return base::unexpected(mapError(code, "prepare", std::string(sql.substr(0, 80)) + ": " + sqlite3_errmsg(db_),
+                                         sqlite3_system_errno(db_)));
     }
     return Statement(db_, statement, std::string(sql));
 }
@@ -241,7 +255,7 @@ base::Status Database::close() {
 }
 
 base::Error Database::error(int code, std::string_view what) const {
-    return mapError(code, what, db_ != nullptr ? sqlite3_errmsg(db_) : "");
+    return mapError(code, what, db_ != nullptr ? sqlite3_errmsg(db_) : "", db_ != nullptr ? sqlite3_system_errno(db_) : 0);
 }
 
 } // namespace archmage::native
