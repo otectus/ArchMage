@@ -9,8 +9,8 @@
 #include <QTest>
 #include <QWidget>
 
+using archmage::base::DPoint;
 using archmage::render::ViewTransform;
-using archmage::tiles::DPoint;
 using archmage::ui::canvas::CanvasSurface;
 using archmage::ui::canvas::SyntheticFrameSource;
 

@@ -4,4 +4,4 @@ archmage_add_module(render
     SOURCES
         src/ViewTransform.cpp
     PUBLIC_LINKS
-        archmage_tiles)
+        archmage_base)

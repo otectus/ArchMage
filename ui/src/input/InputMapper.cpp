@@ -13,7 +13,7 @@
 namespace archmage::ui::input {
 namespace {
 
-tiles::DPoint toPoint(const QPointF &p) { return {p.x(), p.y()}; }
+base::DPoint toPoint(const QPointF &p) { return {p.x(), p.y()}; }
 
 PointerPhase phaseOf(QEvent::Type type, Qt::MouseButtons buttons) {
     switch (type) {
@@ -92,7 +92,7 @@ std::optional<NavigationRequest> InputMapper::navigation(const QEvent &event,
                                                          const render::ViewTransform &view) {
     if (event.type() == QEvent::Wheel) {
         const auto &e = static_cast<const QWheelEvent &>(event);
-        const tiles::DPoint anchor = view.logicalToDevice(toPoint(e.position()));
+        const base::DPoint anchor = view.logicalToDevice(toPoint(e.position()));
         const QPoint pixel = e.pixelDelta();
         const QPoint angle = e.angleDelta();
         NavigationRequest request;
@@ -104,7 +104,7 @@ std::optional<NavigationRequest> InputMapper::navigation(const QEvent &event,
             } else {
                 request.kind = NavigationRequest::Kind::Pan;
                 request.panDevice = view.logicalToDevice(
-                    tiles::DPoint{static_cast<double>(pixel.x()), static_cast<double>(pixel.y())});
+                    base::DPoint{static_cast<double>(pixel.x()), static_cast<double>(pixel.y())});
             }
             return request;
         }
@@ -115,7 +115,7 @@ std::optional<NavigationRequest> InputMapper::navigation(const QEvent &event,
             // One notch pans 64 logical pixels; Qt may already report Shift+wheel on the x axis.
             const int notches = angle.x() != 0 ? angle.x() : angle.y();
             request.kind = NavigationRequest::Kind::Pan;
-            request.panDevice = view.logicalToDevice(tiles::DPoint{notches / 120.0 * 64.0, 0.0});
+            request.panDevice = view.logicalToDevice(base::DPoint{notches / 120.0 * 64.0, 0.0});
             return request;
         }
         request.kind = NavigationRequest::Kind::ZoomAbout;

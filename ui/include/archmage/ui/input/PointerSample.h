@@ -1,6 +1,6 @@
 #pragma once
 
-#include "archmage/tiles/Geometry.h"
+#include "archmage/base/Geometry.h"
 
 #include <Qt>
 
@@ -22,8 +22,8 @@ struct PointerSample {
     std::uint64_t deviceId = 0;            // QInputDevice::systemId(), 0 when unknown
     std::int64_t timestampNs = 0;          // steady-clock time the event was received
     std::uint64_t platformTimestampMs = 0; // QInputEvent::timestamp()
-    tiles::DPoint posDevice;
-    tiles::DPoint posDocument;
+    base::DPoint posDevice;
+    base::DPoint posDocument;
     double pressure = 1.0;
     bool hasPressure = false;
     double tiltX = 0.0;    // degrees
@@ -38,9 +38,9 @@ struct PointerSample {
 struct NavigationRequest {
     enum class Kind { ZoomAbout, Pan };
     Kind kind = Kind::Pan;
-    double zoomFactor = 1.0;    // multiplies the current scale (ZoomAbout)
-    tiles::DPoint anchorDevice; // stays fixed while zooming (ZoomAbout)
-    tiles::DPoint panDevice;    // added to the view's pan (Pan)
+    double zoomFactor = 1.0;   // multiplies the current scale (ZoomAbout)
+    base::DPoint anchorDevice; // stays fixed while zooming (ZoomAbout)
+    base::DPoint panDevice;    // added to the view's pan (Pan)
 };
 
 } // namespace archmage::ui::input

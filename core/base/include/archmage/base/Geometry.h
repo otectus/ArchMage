@@ -1,4 +1,4 @@
-// Integer and floating-point geometry shared by every core module (D-17, spec §6.3).
+// Integer and floating-point geometry shared by every core module (D-17, spec §6.3; ADR-0102).
 //
 // Conventions:
 // - Integer extents and tile addresses are int64_t; rectangles are half-open: [x0, x1) × [y0, y1).
@@ -9,11 +9,14 @@
 // Ownership and thread safety: plain value types with no shared state; safe to copy between threads.
 #pragma once
 
+#include "archmage/base/Checked.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 
-namespace archmage::tiles {
+namespace archmage::base {
 
 struct IPoint {
     std::int64_t x = 0;
@@ -35,6 +38,16 @@ struct IRect {
     [[nodiscard]] constexpr bool contains(IPoint p) const {
         return p.x >= x0 && p.x < x1 && p.y >= y0 && p.y < y1;
     }
+
+    [[nodiscard]] constexpr bool contains(const IRect &o) const {
+        return o.empty() || (o.x0 >= x0 && o.y0 >= y0 && o.x1 <= x1 && o.y1 <= y1);
+    }
+    [[nodiscard]] constexpr bool intersects(const IRect &o) const { return !intersected(o).empty(); }
+    [[nodiscard]] constexpr IRect translated(std::int64_t dx, std::int64_t dy) const {
+        return {x0 + dx, y0 + dy, x1 + dx, y1 + dy};
+    }
+    /// width × height, or nullopt when it does not fit in int64 (D-17 checked allocation arithmetic).
+    [[nodiscard]] std::optional<std::int64_t> checkedArea() const;
 
     [[nodiscard]] constexpr IRect intersected(const IRect &o) const {
         IRect r{std::max(x0, o.x0), std::max(y0, o.y0), std::min(x1, o.x1), std::min(y1, o.y1)};
@@ -98,6 +111,8 @@ struct DRect {
     friend constexpr bool operator==(const DRect &, const DRect &) = default;
 };
 
+inline std::optional<std::int64_t> IRect::checkedArea() const { return checkedMul(width(), height()); }
+
 /// Pixel containing a document point under the half-open convention.
 [[nodiscard]] inline IPoint pixelAt(DPoint p) {
     return {static_cast<std::int64_t>(std::floor(p.x)), static_cast<std::int64_t>(std::floor(p.y))};
@@ -107,4 +122,4 @@ struct DRect {
     return {static_cast<double>(p.x) + 0.5, static_cast<double>(p.y) + 0.5};
 }
 
-} // namespace archmage::tiles
+} // namespace archmage::base

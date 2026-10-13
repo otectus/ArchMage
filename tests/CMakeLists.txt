@@ -59,6 +59,14 @@ archmage_add_test(VersionTest
     LINKS archmage_core)
 target_compile_definitions(VersionTest PRIVATE ARCHMAGE_EXPECTED_VERSION="${PROJECT_VERSION}")
 
+archmage_add_test(BaseTest
+    SOURCES
+        core/base/ExpectedTest.cpp
+        core/base/IdTest.cpp
+        core/base/GeometryTest.cpp
+    LABELS math
+    LINKS archmage_base)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math
