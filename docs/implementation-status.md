@@ -9,8 +9,9 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0 to S1-3 (see below). Next: S1-4, native format save and reopen (gate G4).
-- Before starting S1-4, re-run the G3 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+- Completed: S1-0 to S1-4 (see below). Next: S1-5, recovery, durability, fault injection and malformed
+  input (gate G5).
+- Before starting S1-5, re-run the G4 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
   `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image and document tiers.
 - Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
@@ -55,11 +56,11 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | M0-D3 Feature ledger | Infrastructure done in S1-0; Stage 1 child entries due in S1-9 | `docs/parity/features.yaml`, `docs/parity/report.md` |
 | M0-D4 Architecture decisions | Recorded in S1-0; D-11 provisional until G1 | `docs/decisions/ADR-0001` to `ADR-0030` |
 | M0-D5 Canvas and input prototype | Done in S1-1 | Three `CanvasSurface` adapters, `InputMapper`, `ViewTransform`; ADR-0011 |
-| M0-D6 Memory and format experiments | Partly done: tile memory accounting and eviction ordering in S1-2; container and probes pending (S1-4, S1-6) | `TilesTest` (uniform tiles allocate nothing, dense tiles charge RAM, coordinator eviction order) |
+| M0-D6 Memory and format experiments | Partly done: tile memory accounting and eviction ordering in S1-2; the `.archmage` container in S1-4; probes pending (S1-6) | `TilesTest` (uniform tiles allocate nothing, dense tiles charge RAM, coordinator eviction order); `docs/architecture/native-format.md`, `NativeFormatTest` |
 | M0-D7 Test corpus plan | Done in S1-0 | `docs/testing/corpus-plan.md` |
 | M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Done in S1-1, tablet unavailable | ADR-0011 evidence matrix; `docs/decisions/evidence/S1-1/` |
 | M0-E2 Tile compositing, blur halo, profile conversion, brush latency | CPU tile compositing (S1-2) and brush latency (S1-3, synthetic input) done; blur halo and profile conversion experiment pending (S1-6) | `EvaluatorTest`, `KernelsTest`, `benchmarks/results/2026-10-13-brush.json` |
-| M0-E3 Native save, reopen, kill-during-save recovery | Not started (S1-4, S1-5) | |
+| M0-E3 Native save, reopen, kill-during-save recovery | Save and reopen done in S1-4; failures injected before each save step leave the previous file intact; process termination and recovery pending (S1-5) | `At001Test`, `NativeSaveOnFilesystem.AFailedStepLeavesThePreviousFileIntact` |
 | M0-E4 Layered PSD decode probe | Not started (S1-6) | |
 | M0-E5 RAW file, shaped Arabic and Indic text, macOS GPU path | Not started (S1-6) | |
 | M0-E6 Resource estimates on profiles A to D | Not started (S1-6) | |
@@ -70,7 +71,9 @@ Not verified in Stage 1, each to be closed or carried forward with reproduction 
 Windows and macOS builds (ADR-0021); reference profiles B and D; real tablet input (no tablet on the
 development machine); HDR; display color accuracy (sRGB display assumed, ADR-0010); compositors other
 than Hyprland; accessibility beyond keyboard reachability; mixed DPI across physical monitors and
-real-cursor alignment (S1-1 used headless outputs and synthetic events, ADR-0011); GPU device loss.
+real-cursor alignment (S1-1 used headless outputs and synthetic events, ADR-0011); GPU device loss;
+saving on vfat, exfat and network filesystems (the backup fallback is tested by overriding the detected
+filesystem, not on such a mount).
 
 ## S1-0 Bootstrap and scaffolding: complete, 2026-10-11
 
@@ -422,6 +425,102 @@ stroke is part of the S1-9 manual demonstration.
 - When a scripted replacement edits code, assert that the anchor text exists: clang-format rewraps
   lines, and a silent miss cost two debugging rounds in S1-2 and S1-3.
 
-## S1-4 to S1-9
+## S1-4 Native format save and reopen: complete, 2026-10-13
+
+Work on branch `s1-4-native-format` (`4d9e418`, `edc1851`, `f090c58`, `f473f53`), merged to `main` in
+`37b094e`. The G3 checks were not re-run on `da02d43` before work began: that commit changed only this
+document after the same session's G3 run on `54c971f`, so the run would have repeated an unchanged check.
+The full G3 set passes again on the S1-4 tree below.
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-4.1 Schema v0.1 | Automatically tested | `io/native/schema/0001.sql`, embedded at build time; `NativeSchema.AppliesToAnEmptyDatabaseAndPassesTheIntegrityCheck`: applies to an empty database, `integrity_check` returns ok, `application_id` set, eight tables |
+| S1-4.2 Blob codec | Automatically tested | `Blob.h`; `NativeBlob.*`: zstd and raw round trips; a flipped byte at three offsets, a wrong hash, a wrong or oversized length and a truncated raw blob are `damaged_input`, an unknown codec `unsupported_input`; `NativeFile.ATamperedTileBlobFailsToOpenAsDamagedInput` flips one bit of a stored tile plane |
+| S1-4.3 Writer | Automatically tested | `writeDocument`, `renderPreview`; `NativeFile.RoundTripIsStructurallyEqualAndByteExactForTiles`: every document and layer field equal, tiles byte-exact, the instance still shares its raster, identical composites; `Float32SamplesSurviveBitForBit` (−0.25, 7.5, NaN, a denormal); `StoresAPreviewOfTheCompositeAtMost512Pixels` (512 × 205 for 1500 × 600, pixels equal to the composite at the sampled positions) |
+| S1-4.4 Reader | Automatically tested | `readDocument`; `UnknownContentSurvivesOpenThenSave`: an unknown object's payload text byte for byte, unknown relations, tile planes, a blob, an asset and a manifest key survive open then save, and deleting the layer an unknown relation hangs from drops and counts exactly that relation; `NewerOrUnknownFilesOpenReadOnlyWithTheirPreview`: a newer major (with a changed `objects` table) opens as a read-only preview, a newer minor read-only with content, an unknown capability as a read-only preview; `RejectsFilesThatAreNotArchMageDocuments`: a text file, another SQLite database, a missing file and a view standing in for a table |
+| S1-4.5 Save transaction | Automatically tested on tmpfs (`/tmp`) and btrfs (home) | `saveDocument`; `NativeSaveOnFilesystem.LeavesOneSelfContainedFile`: during the write only the temporary file exists, afterwards only the target, journal mode `delete`; `AFailedStepLeavesThePreviousFileIntact`: a failure before each of five steps leaves the previous file byte-identical and no temporary file, a failure after the rename is reported with the new file in place; `NativeSave.EditsDuringASaveLeaveTheDocumentModified`; `NonAtomicFilesystemsKeepThePreviousFileAsBackup`; `SavesThroughASymbolicLinkAndKeepsTheLink`; `ReportsUnwritableLocationsAsPermissionDenied` |
+| S1-4.6 Save versus Save As | Automatically tested | `identityForSave`, `identityForSaveAs`; `NativeSave.SaveKeepsIdentityAndSaveAsDerivesANewOne`: Save keeps `document_id`, Save As writes a new one with `derived_from`, the original file is untouched |
+| S1-4.7 Migrations | Automatically tested | `Migration.h`; `tests/io/native/fixtures/v0.1.archmage` and its `.expected.json`; `NativeMigration.*`: one step per older minor, a gap is an error, every written minor has a fixture that opens with its recorded IDs, layers and composite samples and passes deep validation |
+| S1-4.8 CLI validate and inspect | Automatically tested | `apps/archmage-cli/main.cpp`; `cli.native` (interchange): the fixture is valid at both levels, a copy with one damaged tile blob exits 1 with a `damaged_input` record, a text file exits 1, a missing file exits 2 with a `permission_denied` / `file.not_found` record, `inspect --json` fields, a usage error exits 2 |
+| S1-4.9 AT-001 engine half | Automatically tested | `At001Test` (`document`, `image`): uint8 and float32 documents created, painted, reordered, renamed, faded and hidden through commands, saved on btrfs and reopened; layer names, order, opacity, visibility, tiles, color policy and sample type equal; composites identical as uint8 and float32 |
+
+### Exit gate G4
+
+Met: the AT-001 engine half passes for uint8 and float32 documents; `archmage-cli validate` (standard and
+deep) and `inspect --json` work on `docs/samples/s1-4-layered.archmage`; `docs/architecture/native-format.md`
+describes schema 0.1 and the save transaction with its fsync and rename sequence.
+
+### Commands and results (2026-10-13)
+
+The gate scripts ran on the working tree that was then committed as `f473f53` (code identical; the commits
+added documentation and removed a trailing blank line). ThreadSanitizer ran two edits earlier, before the
+unknown-filesystem default and a cast in `NativeMigrationTest`; neither touches threads.
+
+| Command | Result |
+| --- | --- |
+| `scripts/check.sh` | exit 0; 140/140 non-UI tests (113 before S1-4); manifest test: 38 entries cover 21 lookups; ledger valid, report current |
+| `scripts/check-ui.sh` | exit 0; 4/4 |
+| `scripts/check-sanitizers.sh` | exit 0; 144/144; 0 compiler warnings |
+| `cmake --preset ci && cmake --build --preset ci && ctest --preset ci --label-exclude '^(perf)$'` | 144/144; 0 warnings under `-Werror` (GCC) |
+| `cmake --preset tsan && cmake --build --preset tsan && ctest --preset tsan -L "operation\|image\|document"` | 77/77, no ThreadSanitizer reports; Clang flagged one `-Wsign-conversion` in `NativeMigrationTest.cpp`, fixed and covered by the sanitizer build above |
+| `build/dev-debug/apps/archmage-cli/archmage-cli validate docs/samples/s1-4-layered.archmage` | exit 0: format 0.1, 8 objects, 60 tile planes, 41 resources |
+| `build/dev-debug/apps/archmage-cli/archmage-cli validate --deep docs/samples/s1-4-layered.archmage` | exit 0: 41 resources verified |
+| `build/dev-debug/apps/archmage-cli/archmage-cli inspect --json docs/samples/s1-4-layered.archmage` | exit 0: layers Background, Ink, Ink instance, Glaze; 3 rasters; 52 dense and 8 uniform tile planes; a 320 × 200 preview |
+| `build/dev-debug/tests/archmage-native-fixture write tests/io/native/fixtures/v0.1.archmage` | 90,112 bytes, with `v0.1.archmage.expected.json` |
+
+### Deviations from the plan
+
+1. ADR-0103 amends D-13: a save writes the captured revision straight into the temporary file rather than
+   through the backup API (no source database exists before S1-5), with the rollback journal in memory
+   because SQLite's defensive mode forbids `journal_mode = OFF`. Newer minors open read-only; older minors
+   migrate in an in-memory copy.
+2. The writer and reader are functions behind one header, `NativeFile.h`, in `NativeWriter.cpp` and
+   `NativeReader.cpp`; `Payloads.cpp` holds the object encoders and the untrusted-input parsers they share.
+3. Validation has three levels: `Quick` for the save path, `Standard` for `validate` (a full load, which
+   already verifies every tile blob it decodes) and `Deep` for `validate --deep`.
+4. `SaveRequest::hook` is the seam for fault injection, which S1-5 drives from `ARCHMAGE_FAULT` (D-27);
+   `SaveRequest::filesystem` overrides detection, which is how the backup fallback is tested.
+5. Unrecognized filesystem types take the backup fallback, the conservative reading of spec §10.3.
+6. Four commits instead of one per task: the reader, writer, save transaction and their tests depend on
+   each other, so S1-4.1 to S1-4.7 and S1-4.9 share `edc1851`.
+7. The G3 checks were not re-run separately before work began (see above).
+8. The interim main window does not save or open files; that is shell work (S1-7, S1-8).
+
+### Progress report (plan §8.2)
+
+#### S1-4 Native format save and reopen, 2026-10-13
+
+- **Implemented outcomes:** documents save to `.archmage` files through a validated temporary file, fsync
+  and atomic rename, and reopen with identical structure and pixels; damaged files are reported, never
+  misread; files from newer versions open read-only with their preview; content this version does not
+  understand survives open and save; `archmage-cli validate` and `inspect`.
+- **Changed modules:** `io/native` (new code), `core/tiles`, `core/color` and `core/document` (name
+  parsers, preserved content), `apps/archmage-cli`, `tests/io/native`, `tests/cli`.
+- **Passing evidence (commands and result paths):** the table above.
+- **Manual validation (what, how, platform):** none by a person; the CLI commands above were run by hand
+  on the sample.
+- **Performance changes (benchmark result file):** none recorded; large-document save and open timings are
+  an open item before the major-1 freeze.
+- **Migrations:** schema 0.1 introduced, with fixture `tests/io/native/fixtures/v0.1.archmage`; no
+  migration steps yet.
+- **Dependency changes (manifest diff):** SQLite and Zstandard move from `found_not_linked` to `linked`; no
+  new dependencies.
+- **Open risks:** opening loads every tile (memory grows with the document until spooling in S1-5);
+  migrations copy whole files into memory; page size and indices are not benchmarked; interrupted saves are
+  exercised with injected errors, not process termination (S1-5).
+- **State by behavior:** native save, open, validate and inspect automatically tested; nothing manually
+  tested by a person or verified against a benchmark product.
+- **Sample document:** `docs/samples/s1-4-layered.archmage`.
+
+### Notes for the next session
+
+- SQLite's defensive mode, on for every connection, silently ignores `PRAGMA journal_mode = OFF`; use
+  `MEMORY` for files that are discarded on failure.
+- With nlohmann/json 3.12, `EXPECT_EQ(std::string, json)` does not compile; compare with `.get<T>()`.
+- Do not name an `INSTANTIATE_TEST_SUITE_P` name-generator parameter `info`: `-Wshadow` flags it.
+
+## S1-5 to S1-9
 
 Not started.
