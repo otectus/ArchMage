@@ -79,8 +79,10 @@ public:
     [[nodiscard]] virtual base::IRect requiredInputRegion(const base::IRect &output, std::size_t index) const;
     /// Extra border a neighborhood operation reads around its output.
     [[nodiscard]] virtual std::int64_t halo() const { return 0; }
-    /// Hash of every input that affects the output: type, version, parameters, sources and inputs' keys.
-    [[nodiscard]] virtual std::uint64_t cacheKey() const = 0;
+    /// Hash of every input that affects the output inside `region`: type, version, parameters, the source
+    /// tiles the region reads and the inputs' keys for their required regions. Regions whose inputs did not
+    /// change keep their key across revisions, so only changed tiles are re-evaluated (spec §7.2).
+    [[nodiscard]] virtual std::uint64_t cacheKey(const base::IRect &region) const = 0;
 
     /// Writes the node's output for out.region() into `out`, which arrives transparent.
     virtual base::Status evaluate(const EvaluationContext &context, ImageBuffer &out) const = 0;
@@ -98,7 +100,7 @@ public:
     [[nodiscard]] int algorithmVersion() const override { return 1; }
     [[nodiscard]] OperationClass operationClass() const override { return OperationClass::Local; }
     [[nodiscard]] base::IRect bounds() const override { return bounds_; }
-    [[nodiscard]] std::uint64_t cacheKey() const override { return key_; }
+    [[nodiscard]] std::uint64_t cacheKey(const base::IRect &region) const override;
     base::Status evaluate(const EvaluationContext &context, ImageBuffer &out) const override;
     base::Status evaluateOver(const EvaluationContext &context, ImageBuffer &dst) const override;
 
@@ -106,7 +108,7 @@ private:
     std::shared_ptr<const document::Layer> layer_;
     tiles::SampleType sampleType_;
     base::IRect bounds_;
-    std::uint64_t key_;
+    std::uint64_t parameterKey_; // type, version, offset, opacity, sample type
 };
 
 /// Source-over of its inputs, bottom to top (spec §7.4 equations; encoded blend policy, D-09).
@@ -121,13 +123,12 @@ public:
     [[nodiscard]] std::span<const std::shared_ptr<const GraphNode>> inputs() const override {
         return inputs_;
     }
-    [[nodiscard]] std::uint64_t cacheKey() const override { return key_; }
+    [[nodiscard]] std::uint64_t cacheKey(const base::IRect &region) const override;
     base::Status evaluate(const EvaluationContext &context, ImageBuffer &out) const override;
 
 private:
     std::vector<std::shared_ptr<const GraphNode>> inputs_;
     base::IRect bounds_;
-    std::uint64_t key_;
 };
 
 /// The document's layer stack as a graph: visible layers with nonzero opacity, bottom to top, under one

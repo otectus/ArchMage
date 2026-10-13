@@ -140,7 +140,7 @@ void CpuEvaluator::clearCache() {
 
 base::Result<std::shared_ptr<const ImageBuffer>>
 CpuEvaluator::renderTile(const GraphNode &root, tiles::TileCoord tile, const EvaluationContext &context) {
-    const CacheKey key{root.cacheKey(), tile, context.quality, context.time};
+    const CacheKey key{root.cacheKey(tiles::tilePixelRect(tile)), tile, context.quality, context.time};
     {
         const std::lock_guard lock(cacheMutex_);
         if (const auto it = cache_.find(key); it != cache_.end()) {

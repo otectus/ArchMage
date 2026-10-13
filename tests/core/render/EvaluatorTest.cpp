@@ -185,6 +185,19 @@ TEST(Evaluator, CacheServesAnUnchangedRevision) {
     EXPECT_GT(evaluator.tilesEvaluated(), evaluated) << "a changed layer changes the cache key";
 }
 
+TEST(Evaluator, OnlyTilesWhoseSourcesChangedAreReevaluated) {
+    const DocumentState doc = threeLayerDocument(); // 300 x 200: tiles x 0..2, y 0..1
+    CpuEvaluator evaluator;
+    ASSERT_TRUE(evaluator.render(doc, requestFor(doc, doc.canvasRect())));
+    const std::uint64_t first = evaluator.tilesEvaluated();
+    ASSERT_EQ(first, 6u);
+    DocumentState edited = doc; // repaint one pixel of the bottom layer, inside tile (2, 1)
+    edited.layers[0] = paint(doc.layers[0], IRect{290, 150, 291, 151}, {0, 255, 255, 255});
+    ASSERT_TRUE(evaluator.render(edited, requestFor(edited, edited.canvasRect())));
+    EXPECT_EQ(evaluator.tilesEvaluated(), first + 1)
+        << "one changed source tile, one re-evaluated output tile";
+}
+
 class SlowNode final : public GraphNode {
 public:
     SlowNode(std::stop_source *stopper, std::atomic<int> *evaluations)
@@ -193,7 +206,7 @@ public:
     [[nodiscard]] int algorithmVersion() const override { return 1; }
     [[nodiscard]] OperationClass operationClass() const override { return OperationClass::Local; }
     [[nodiscard]] IRect bounds() const override { return {-100000, -100000, 100000, 100000}; }
-    [[nodiscard]] std::uint64_t cacheKey() const override { return 42; }
+    [[nodiscard]] std::uint64_t cacheKey(const IRect &) const override { return 42; }
     base::Status evaluate(const EvaluationContext &, ImageBuffer &) const override {
         if (evaluations_->fetch_add(1) == 0) {
             stopper_->request_stop();

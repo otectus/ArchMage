@@ -82,12 +82,27 @@ LayerSourceNode::LayerSourceNode(std::shared_ptr<const document::Layer> layer, t
     KeyBuilder key;
     key.add(typeId())
         .add(static_cast<std::uint64_t>(algorithmVersion()))
-        .add(layer_->content->tiles.generation())
         .add(layer_->offset.x)
         .add(layer_->offset.y)
         .add(static_cast<double>(layer_->opacity))
-        .add(static_cast<std::uint64_t>(sampleType_));
-    key_ = key.finish();
+        .add(static_cast<std::uint64_t>(sampleType_))
+        .add(layer_->content->tiles.defaultTile()->version());
+    parameterKey_ = key.finish();
+}
+
+std::uint64_t LayerSourceNode::cacheKey(const base::IRect &region) const {
+    // The tiles this region reads, by content version (0 for tiles reading as the default).
+    KeyBuilder key;
+    key.add(parameterKey_);
+    const base::IRect local = region.intersected(bounds_).translated(-layer_->offset.x, -layer_->offset.y);
+    const base::IRect range = tiles::tileRangeCovering(local);
+    for (std::int64_t ty = range.y0; ty < range.y1; ++ty) {
+        for (std::int64_t tx = range.x0; tx < range.x1; ++tx) {
+            const auto tile = layer_->content->tiles.find({tx, ty});
+            key.add(tile ? tile->version() : std::uint64_t{0});
+        }
+    }
+    return key.finish();
 }
 
 base::Status LayerSourceNode::evaluate(const EvaluationContext &context, ImageBuffer &out) const {
@@ -169,15 +184,20 @@ base::Status LayerSourceNode::evaluateOver(const EvaluationContext &context, Ima
 
 CompositeNode::CompositeNode(std::vector<std::shared_ptr<const GraphNode>> bottomToTop)
     : inputs_(std::move(bottomToTop)) {
-    KeyBuilder key;
-    key.add(typeId())
-        .add(static_cast<std::uint64_t>(algorithmVersion()))
-        .add(static_cast<std::uint64_t>(inputs_.size()));
     for (const auto &input : inputs_) {
         bounds_ = bounds_.united(input->bounds());
-        key.add(input->cacheKey());
     }
-    key_ = key.finish();
+}
+
+std::uint64_t CompositeNode::cacheKey(const base::IRect &region) const {
+    KeyBuilder key;
+    key.add(typeId()).add(static_cast<std::uint64_t>(algorithmVersion()));
+    for (const auto &input : inputs_) {
+        if (input->bounds().intersects(region)) { // inputs outside the region cannot affect it
+            key.add(input->cacheKey(region));
+        }
+    }
+    return key.finish();
 }
 
 base::Status CompositeNode::evaluate(const EvaluationContext &context, ImageBuffer &out) const {
