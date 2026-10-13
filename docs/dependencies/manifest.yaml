@@ -15,7 +15,17 @@ recorded: 2026-10-11
 platform: "CachyOS (Arch Linux), x86_64; running kernel 7.2.7 with 7.2.9 installed (reboot pending); reference profile A (plan §7.2)"
 fonts: []      # none bundled (ADR-0025)
 brushes: []    # none bundled
-fixtures: []   # none yet; planned fixtures and their licenses: docs/testing/corpus-plan.md
+fixtures:      # third-party fixtures; project-owned ones are registered in docs/testing/corpus-plan.md
+  - id: rawpixls-canon-powershot-a410-chdk
+    name: "raw.pixls.us sample: Canon PowerShot A410, 10-bit CHDK 1.5.0 DNG (4:3)"
+    source: "https://raw.pixls.us/getfile.php/1327/nice/Canon%20-%20Canon%20PowerShot%20A410%20-%2010bit%2010bit%20CHDK%20ver.%201.5.0%20(4:3).DNG"
+    checksum: sha256:f0d2fe47507fadf50008bddbc6bd2c5e39fddbe90cca6bca72dd360fa0e0eb38
+    size_bytes: 4219200
+    license: ["CC0-1.0"]
+    license_evidence: "The raw.pixls.us repository table (json/getrepository.php?set=all) links this sample to https://creativecommons.org/publicdomain/zero/1.0/; the site's upload terms release submissions under CC0."
+    location: "corpus directory, ~/.local/share/archmage-dev/corpus/canon-powershot-a410-chdk-10bit.dng (not in the repository)"
+    retrieved: 2026-10-13
+    affects: ["RAW decode probe (S1-6.6, M0-E5)", "docs/decisions/evidence/S1-6/raw/raw-probe-preview.png (derived, CC0)"]
 models: []     # no model weights in Stage 1
 services: []   # no optional services in Stage 1
 dependencies:
@@ -338,7 +348,7 @@ dependencies:
   - id: libraw
     name: "LibRaw (thread-safe libraw_r)"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [pkg_config:libraw_r]
     source: {type: system_package, package: libraw, repository: cachyos-extra-v3, upstream: "https://www.libraw.org/"}
     version: "0.22.2-1.1"

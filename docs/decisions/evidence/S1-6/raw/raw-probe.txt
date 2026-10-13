@@ -1,0 +1,12 @@
+file: canon-powershot-a410-chdk-10bit.dng, 4219200 bytes, sha256 f0d2fe47507fadf50008bddbc6bd2c5e39fddbe90cca6bca72dd360fa0e0eb38
+LibRaw 0.22.2-Release
+camera: Canon PowerShot A410 (normalized Canon PowerShot A410)
+raw: 2144 x 1560; visible 2088 x 1552 at (2, 6); output 2088 x 1552
+orientation: LibRaw flip 0 (none); applied when the image is produced
+color filter: RGBG, 3 colors, filters 0xb4b4b4b4, DNG yes
+exposure: ISO 50, shutter 0.002356 s, aperture f/5.5, focal length 9.8 mm
+black level: 31 (per channel 0 0 0 0); white level: 1023
+demosaiced: 2088 x 1552, 3 x 16 bits, camera white balance, sRGB
+float32 tile map: 221 tiles; samples in [0.0000, 1.0000], mean 0.1762
+exported raw-probe.png (2088 x 1552, 8-bit sRGB) through the CPU compositor
+exported raw-probe-preview.png (696 x 517, 3 x 3 box filter)

@@ -12,3 +12,9 @@ add_executable(psd_probe probes/psd_probe.cpp)
 target_link_libraries(psd_probe PRIVATE archmage_core archmage_probe_png)
 archmage_target_warnings(psd_probe)
 add_dependencies(benchmarks psd_probe)
+
+# M0-E5: LibRaw opens a RAW or DNG file, reports camera and levels, demosaics into a float32 tile map.
+add_executable(raw_probe probes/raw_probe.cpp)
+target_link_libraries(raw_probe PRIVATE archmage_core archmage_probe_png PkgConfig::LibRaw)
+archmage_target_warnings(raw_probe)
+add_dependencies(benchmarks raw_probe)
