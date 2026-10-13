@@ -1,0 +1,11 @@
+// Generated from io/native/schema/0001.sql by io/native/CMakeLists.txt; edit the .sql file.
+#include "archmage/native/Format.h"
+
+namespace archmage::native {
+
+std::string_view schemaSql() {
+    static constexpr std::string_view kSql = R"archmage_sql(@ARCHMAGE_SCHEMA_SQL@)archmage_sql";
+    return kSql;
+}
+
+} // namespace archmage::native

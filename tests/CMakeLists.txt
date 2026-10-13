@@ -148,3 +148,43 @@ add_test(NAME cli.version
         -D "EXPECTED_VERSION=${PROJECT_VERSION}"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cli/CheckVersion.cmake")
 set_tests_properties(cli.version PROPERTIES LABELS interchange)
+
+# Native format (S1-4): writer, reader, save transaction, migrations, AT-001 engine half.
+add_library(archmage_native_test_support STATIC io/native/NativeTestSupport.cpp)
+target_link_libraries(archmage_native_test_support
+    PUBLIC archmage_native archmage_commands archmage_brush archmage_render GTest::gtest)
+target_include_directories(archmage_native_test_support PUBLIC io/native)
+# A scratch directory on the build tree's filesystem (the home filesystem), next to /tmp (tmpfs).
+target_compile_definitions(archmage_native_test_support PRIVATE ARCHMAGE_HOME_SCRATCH="${CMAKE_BINARY_DIR}/test-scratch")
+archmage_target_warnings(archmage_native_test_support)
+
+archmage_add_test(NativeFormatTest
+    SOURCES io/native/NativeFormatTest.cpp
+    LABELS document
+    LINKS archmage_native_test_support)
+
+archmage_add_test(NativeMigrationTest
+    SOURCES io/native/NativeMigrationTest.cpp
+    LABELS document
+    LINKS archmage_native_test_support)
+target_compile_definitions(NativeMigrationTest PRIVATE ARCHMAGE_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/io/native/fixtures")
+
+archmage_add_test(At001Test
+    SOURCES io/native/At001Test.cpp
+    LABELS document image
+    LINKS archmage_native_test_support)
+
+# Writes fixtures (once per schema minor) and damaged copies for the CLI tests; not run by CTest itself.
+add_executable(archmage-native-fixture io/native/FixtureTool.cpp)
+target_link_libraries(archmage-native-fixture PRIVATE archmage_native archmage_commands archmage_brush archmage_render)
+archmage_target_warnings(archmage-native-fixture)
+
+# CLI subprocess checks: validate and inspect on the fixture, a damaged copy and a missing file.
+add_test(NAME cli.native
+    COMMAND "${CMAKE_COMMAND}"
+        -D "CLI=$<TARGET_FILE:archmage-cli>"
+        -D "FIXTURE_TOOL=$<TARGET_FILE:archmage-native-fixture>"
+        -D "FIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/io/native/fixtures/v0.1.archmage"
+        -D "WORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli-native"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cli/CheckNativeCli.cmake")
+set_tests_properties(cli.native PROPERTIES LABELS interchange)

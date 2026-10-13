@@ -1,9 +1,11 @@
 # ArchMage architecture overview
 
-Status: S1-2. The headless core exists: vocabulary types, tiles, the document model, commands with an
-executor and jobs, color profiles and the CPU evaluator, plus the S1-1 canvas experiment. Native files,
-recovery, painting and the shell are planned design from `docs/plans/Stage1_Development_Plan.md` and its
-ADRs in `docs/decisions/`. The "Contents" column lists what exists today.
+Status: S1-4. The headless core exists: vocabulary types, tiles, the document model, commands with an
+executor and jobs, color profiles, the CPU evaluator and the brush; the interim window paints on a
+document canvas (S1-3); documents save to and open from `.archmage` files (S1-4,
+`docs/architecture/native-format.md`). Recovery and the shell are planned design from
+`docs/plans/Stage1_Development_Plan.md` and its ADRs in `docs/decisions/`. The "Contents" column lists
+what exists today.
 
 ## Boundaries (spec §5.4)
 
@@ -36,12 +38,12 @@ the job model (S1-2.10) is the seam they will use (plan A-15).
 | `core/tiles/` | `archmage_tiles` | `archmage::tiles` | Sparse tile storage, sharing, cache, storage-backed eviction | no | `SampleType`, `ChannelLayout`, `Tile`, `TileBuffer`, `TileMap` (chunked copy-on-write), `DirtyRegion`, `ResourceCoordinator` | S1-2, S1-5 |
 | `core/render/` | `archmage_render` | `archmage::render` | Evaluation graph, scheduler, CPU kernels, GPU backend contracts | no | `ViewTransform`; `GraphNode`, `LayerSourceNode`, `CompositeNode`, `compileGraph`; source-over kernels; `CpuEvaluator` with `RenderRequest` | S1-1, S1-2, S1-6 |
 | `core/color/` | `archmage_color` | `archmage::color` | Profiles, conversions, view transforms, proofing | no | `ColorProfile` (Little CMS, pinned sRGB), `ColorPolicy`, `ColorPipeline`, `iccTransform` | S1-2, S1-6 |
-| `core/brush/` | `archmage_brush` | `archmage::brush` | Input processing, brush engines, stroke replay and deltas | no | none (INTERFACE) | S1-3 |
-| `io/native/` | `archmage_native` | `archmage::native` | `.archmage` container, save transaction, recovery workspace | no | none (INTERFACE) | S1-4, S1-5 |
+| `core/brush/` | `archmage_brush` | `archmage::brush` | Input processing, brush engines, stroke replay and deltas | no | `Stroke.h`: `BrushSettings`, `StrokeResampler`, round dabs, `StrokeMask`, `paintLayer`, `StrokeSession` | S1-3 |
+| `io/native/` | `archmage_native` | `archmage::native` | `.archmage` container, save transaction, recovery workspace | no | schema 0.1 (`schema/0001.sql`), `Database`/`Statement` (SQLite), `Blob` codec, `writeDocument`, `readDocument`, `validateFile`, `inspectFile`, `saveDocument`, migrations, `Platform` (statfs, fsync, rename) | S1-4, S1-5 |
 | `io/formats/` | `archmage_formats` | `archmage::formats` | PNG and JPEG codecs behind adapters | no | none (INTERFACE) | S1-8 |
-| `ui/` | `archmage_ui` | `archmage::ui` | Tools, panels, canvas interaction, accessibility, themes | yes | empty `MainWindow`; `canvas/` (`CanvasSurface` with raster, QRhiWidget and QVulkanWindow adapters, ADR-0011), `input/` (`InputMapper`), `experiments/` (S1-1 harness) | S1-1, S1-3, S1-7, S1-8 |
-| `apps/archmage/` | `archmage` | n/a | Desktop executable | yes | opens `MainWindow`; `--experiment=canvas:<kind>` runs the S1-1 harness | S1-7, S1-8 |
-| `apps/archmage-cli/` | `archmage-cli` | n/a | Headless validate, inspect, render, recover | no | `--version` | S1-4, S1-5, S1-8 |
+| `ui/` | `archmage_ui` | `archmage::ui` | Tools, panels, canvas interaction, accessibility, themes | yes | interim `MainWindow` (one document, brush, undo and redo); `document/` (`DocumentSession`), `DocumentView`, `tools/` (`BrushTool`); `canvas/` (`CanvasSurface` with raster, QRhiWidget and QVulkanWindow adapters, ADR-0011; `DocumentFrameSource`), `input/` (`InputMapper`), `experiments/` (S1-1 harness, brush latency benchmark) | S1-1, S1-3, S1-7, S1-8 |
+| `apps/archmage/` | `archmage` | n/a | Desktop executable | yes | opens `MainWindow`; `--experiment=canvas:<kind>` runs the S1-1 harness; `--benchmark=brush-latency` (S1-3.7) | S1-7, S1-8 |
+| `apps/archmage-cli/` | `archmage-cli` | n/a | Headless validate, inspect, render, recover | no | `--version`, `validate [--deep] [--json]`, `inspect [--json]` | S1-4, S1-5, S1-8 |
 
 Canvas presentation (ADR-0011): every surface presents a CPU-rendered frame through `CanvasSurface`;
 `CanvasSurface::defaultKind()` is raster unless `ARCHMAGE_CANVAS` selects `vulkan` or `rhi`. Shaders
@@ -82,6 +84,8 @@ CPU evaluator, keyed by `TileMap::generation()` and node parameters.
 
 ## Where to look next
 
-- Decisions: `docs/decisions/ADR-0001` to `ADR-0030`, one per plan decision D-01 to D-30.
+- Decisions: `docs/decisions/ADR-0001` to `ADR-0030`, one per plan decision D-01 to D-30; ADR-0101
+  onward record decisions made during implementation.
+- Native files and the save transaction: `docs/architecture/native-format.md`.
 - Dependencies: `docs/dependencies/manifest.yaml`.
 - Current state and evidence: `docs/implementation-status.md`.

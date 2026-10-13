@@ -36,6 +36,16 @@ std::string_view channelName(ChannelSemantic semantic) {
     return "unknown";
 }
 
+std::optional<ChannelSemantic> channelFromName(std::string_view name) {
+    for (int i = 0; i <= static_cast<int>(ChannelSemantic::Index); ++i) {
+        const auto semantic = static_cast<ChannelSemantic>(i);
+        if (channelName(semantic) == name) {
+            return semantic;
+        }
+    }
+    return std::nullopt;
+}
+
 ChannelLayout::ChannelLayout(std::vector<ChannelSemantic> planes, SampleType type)
     : planes_(std::move(planes)), type_(type) {}
 

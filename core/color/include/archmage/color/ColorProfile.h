@@ -12,6 +12,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <span>
 #include <string>
 #include <vector>
@@ -57,5 +58,6 @@ struct ColorPolicy {
 };
 
 [[nodiscard]] std::string_view blendPolicyName(BlendPolicy policy);
+[[nodiscard]] std::optional<BlendPolicy> blendPolicyFromName(std::string_view name);
 
 } // namespace archmage::color
