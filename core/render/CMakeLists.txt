@@ -6,6 +6,7 @@ archmage_add_module(render
         src/Kernels.cpp
         src/Graph.cpp
         src/CpuEvaluator.cpp
+        src/Blur.cpp
     PUBLIC_LINKS
         archmage_base
         archmage_tiles

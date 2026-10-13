@@ -92,6 +92,11 @@ archmage_add_test(EvaluatorTest
     LABELS image
     LINKS archmage_render)
 
+archmage_add_test(BlurTest
+    SOURCES core/render/BlurTest.cpp
+    LABELS image
+    LINKS archmage_render archmage_commands)
+
 archmage_add_test(GpuTest
     SOURCES core/render/GpuTest.cpp
     LABELS image
