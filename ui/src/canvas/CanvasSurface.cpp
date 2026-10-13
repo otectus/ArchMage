@@ -87,6 +87,7 @@ void CanvasSurface::setInputSink(CanvasInputSink *sink) { sink_ = sink; }
 
 void CanvasSurface::setViewTransform(const render::ViewTransform &view) {
     view_ = render::ViewTransform{view.scale(), view.pan(), dpr_};
+    emit viewChanged();
     requestFrame();
 }
 
@@ -94,7 +95,8 @@ void CanvasSurface::updateGeometry(QSize deviceSize, double devicePixelRatio) {
     if (deviceSize == deviceSize_ && devicePixelRatio == dpr_) {
         return;
     }
-    if (devicePixelRatio != dpr_ && !deviceSize.isEmpty()) {
+    const bool ratioChanged = devicePixelRatio != dpr_ && !deviceSize.isEmpty();
+    if (ratioChanged) {
         const render::DSize logical{deviceSize.width() / devicePixelRatio,
                                     deviceSize.height() / devicePixelRatio};
         view_ = view_.withDevicePixelRatio(devicePixelRatio, logical);
@@ -102,6 +104,9 @@ void CanvasSurface::updateGeometry(QSize deviceSize, double devicePixelRatio) {
     deviceSize_ = deviceSize;
     dpr_ = devicePixelRatio;
     emit geometryChanged(deviceSize_, dpr_);
+    if (ratioChanged) {
+        emit viewChanged();
+    }
 }
 
 const QImage &CanvasSurface::produceFrame(QSize deviceSize, double devicePixelRatio) {

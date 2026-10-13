@@ -8,6 +8,7 @@
 
 #include "archmage/document/Version.h"
 #include "archmage/ui/MainWindow.h"
+#include "archmage/ui/Theme.h"
 #include "archmage/ui/canvas/VulkanSupport.h"
 #include "archmage/ui/experiments/BrushLatencyBenchmark.h"
 #include "archmage/ui/experiments/CanvasExperiment.h"
@@ -131,8 +132,16 @@ int main(int argc, char *argv[]) {
     QApplication::setApplicationVersion(version);
     // Becomes the Wayland app_id, which Hyprland reports as the client class.
     QApplication::setDesktopFileName(QStringLiteral("archmage"));
+    archmage::ui::theme::apply(app);
 
     archmage::ui::MainWindow window;
+    // Files named on the command line open after the window is up (spec §1.2: a document path argument).
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg{argv[i]};
+        if (!arg.empty() && arg.front() != '-') {
+            window.openFile(QString::fromLocal8Bit(argv[i]));
+        }
+    }
     if (launchBenchmark) {
         // Ready: the first paint of the window, then one turn of the event loop for the remaining paints.
         struct FirstPaint final : QObject {

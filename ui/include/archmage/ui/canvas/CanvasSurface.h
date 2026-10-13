@@ -86,6 +86,8 @@ public:
 
 signals:
     void geometryChanged(QSize deviceSize, double devicePixelRatio);
+    /// The view transform changed (zoom, pan or device pixel ratio).
+    void viewChanged();
     void deviceLost(const QString &reason);
     void framePresented();
 

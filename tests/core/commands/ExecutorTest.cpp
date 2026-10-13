@@ -45,6 +45,22 @@ TEST(Executor, CommitsInOrderAndReportsRevisions) {
     EXPECT_EQ(executor.current()->provenance[0]["commandId"], "archmage.layer.add");
 }
 
+TEST(Executor, DrainWaitsForEveryQueuedCommand) {
+    MutationExecutor executor(newDocument(), "New Document");
+    const std::string layer = backgroundId(executor);
+    std::atomic<int> completed{0};
+    for (int i = 1; i <= 50; ++i) {
+        executor.submit(opacity(layer, i / 100.0), [&](const base::Result<CommandResult> &result) {
+            EXPECT_TRUE(result);
+            completed.fetch_add(1);
+        });
+    }
+    executor.drain();
+    EXPECT_EQ(completed.load(), 50) << "every command queued before drain() has run";
+    EXPECT_EQ(executor.current()->sequence, 51u);
+    EXPECT_FLOAT_EQ(executor.current()->state->layers[0]->opacity, 0.5f);
+}
+
 TEST(Executor, RepeatedRequestIdAppliesOnce) {
     MutationExecutor executor(newDocument(), "New Document");
     const CommandEnvelope add = CommandEnvelope::make("archmage.layer.add");

@@ -30,10 +30,11 @@ function(archmage_add_test name)
         set_target_properties(${name} PROPERTIES AUTOMOC ON)
         add_test(NAME ${name} COMMAND ${name})
         # Desktop theming from the developer's session must not leak in: a platform theme such
-        # as qt6ct initializes GTK, which aborts when no display exists.
+        # as qt6ct initializes GTK, which aborts when no display exists. The shell's recovery
+        # journals go to the build tree, never to the developer's state directory.
         set_tests_properties(${name} PROPERTIES
             LABELS "${ARG_LABELS}"
-            ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;QT_QPA_PLATFORMTHEME=unset:;QT_STYLE_OVERRIDE=unset:")
+            ENVIRONMENT_MODIFICATION "QT_QPA_PLATFORM=set:offscreen;QT_QPA_PLATFORMTHEME=unset:;QT_STYLE_OVERRIDE=unset:;XDG_STATE_HOME=set:${CMAKE_BINARY_DIR}/test-state")
         if(ARG_ENVIRONMENT)
             set_tests_properties(${name} PROPERTIES ENVIRONMENT "${ARG_ENVIRONMENT}")
         endif()
@@ -160,6 +161,15 @@ archmage_add_test(BrushSliceTest
     LABELS ui
     LINKS archmage_ui
     QT)
+
+# Shell (S1-7): regions, documents, layers, colors, navigation and keyboard access, all offscreen.
+foreach(shell_test IN ITEMS ShellTest LayersPanelTest NavigationTest ColorPanelTest ShellPromptsTest)
+    archmage_add_test(${shell_test}
+        SOURCES ui/${shell_test}.cpp ui/ShellTestSupport.h
+        LABELS ui
+        LINKS archmage_ui
+        QT)
+endforeach()
 
 # CLI subprocess check: archmage-cli --version exits 0 and prints the version banner.
 add_test(NAME cli.version

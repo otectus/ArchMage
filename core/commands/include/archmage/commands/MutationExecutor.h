@@ -68,6 +68,10 @@ public:
     /// executor is destroyed are run first (the queue drains).
     void submit(CommandEnvelope envelope, Completion done);
     base::Result<CommandResult> execute(CommandEnvelope envelope);
+    /// Returns once every command queued before the call has been applied (and its observers have run).
+    /// The shell calls it before deciding whether a document is modified or switching documents, so a
+    /// stroke submitted a moment earlier is counted.
+    void drain();
     /// Applies `envelope` only if `precondition` holds for the current state; the check and the commit
     /// happen together on the executor thread, so nothing can land in between (spec §9.3 step 2).
     base::Result<CommandResult> executeIf(CommandEnvelope envelope, Precondition precondition);

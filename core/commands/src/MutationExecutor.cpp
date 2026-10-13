@@ -87,6 +87,10 @@ void MutationExecutor::submit(CommandEnvelope envelope, Completion done) {
     queueReady_.notify_one();
 }
 
+void MutationExecutor::drain() {
+    runOnExecutor([] {}); // the queue is first in, first out
+}
+
 base::Result<CommandResult> MutationExecutor::execute(CommandEnvelope envelope) {
     return runOnExecutor([this, envelope = std::move(envelope)] { return applyCommand(envelope); });
 }

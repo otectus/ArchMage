@@ -1,6 +1,7 @@
 #include "archmage/ui/tools/BrushTool.h"
 
 #include "archmage/commands/Command.h"
+#include "archmage/ui/ColorState.h"
 #include "archmage/ui/document/DocumentSession.h"
 
 namespace archmage::ui {
@@ -13,10 +14,11 @@ brush::StrokeSample toStrokeSample(const input::PointerSample &sample) {
 
 } // namespace
 
-BrushTool::BrushTool(brush::PaintMode mode) { settings_.mode = mode; }
+BrushTool::BrushTool(ToolSettings *settings, brush::PaintMode mode)
+    : settings_(settings != nullptr ? settings : &own_), mode_(mode) {}
 
 QString BrushTool::id() const {
-    return settings_.mode == brush::PaintMode::Erase ? QStringLiteral("eraser") : QStringLiteral("brush");
+    return mode_ == brush::PaintMode::Erase ? QStringLiteral("eraser") : QString::fromLatin1(tool_ids::kBrush);
 }
 
 bool BrushTool::pointer(const input::PointerSample &sample) {
@@ -65,8 +67,14 @@ void BrushTool::begin(const input::PointerSample &sample) {
             QStringLiteral("The layer \"%1\" is locked.").arg(QString::fromStdString(layer->name)));
         return;
     }
+    brush::BrushSettings settings = settings_->brush;
+    settings.mode = mode_;
+    if (const ColorState *colors = host_->colors()) {
+        const QColor color = colors->foreground();
+        settings.color = {static_cast<float>(color.redF()), static_cast<float>(color.greenF()),
+                          static_cast<float>(color.blueF())};
+    }
     // Pointer devices without pressure paint at the full size (spec §16.1 PNT-03 fallback).
-    brush::BrushSettings settings = settings_;
     if (!sample.hasPressure) {
         settings.pressureSize = false;
     }
