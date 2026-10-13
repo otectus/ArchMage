@@ -82,6 +82,16 @@ archmage_add_test(DocumentTest
     LABELS document
     LINKS archmage_document)
 
+archmage_add_test(KernelsTest
+    SOURCES core/render/KernelsTest.cpp
+    LABELS math
+    LINKS archmage_render)
+
+archmage_add_test(EvaluatorTest
+    SOURCES core/render/EvaluatorTest.cpp
+    LABELS image
+    LINKS archmage_render)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math

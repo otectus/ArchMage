@@ -3,6 +3,7 @@
 #include "archmage/base/Checked.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cassert>
 #include <unordered_set>
 
@@ -15,6 +16,10 @@ std::int64_t floorDiv(std::int64_t a, std::int64_t b) {
 }
 
 std::int64_t floorDivShift(std::int64_t a, int shift) { return a >> shift; } // arithmetic shift floors
+
+std::atomic<std::uint64_t> gNextGeneration{1};
+
+std::uint64_t nextGeneration() { return gNextGeneration.fetch_add(1, std::memory_order_relaxed); }
 
 } // namespace
 
@@ -51,7 +56,7 @@ TileMap::TileMap(ChannelLayout layout)
 
 TileMap::TileMap(ChannelLayout layout, std::shared_ptr<const Tile> defaultTile)
     : layout_(std::make_shared<const ChannelLayout>(std::move(layout))), default_(std::move(defaultTile)),
-      dir_(std::make_shared<Directory>()) {
+      dir_(std::make_shared<Directory>()), generation_(nextGeneration()) {
     assert(default_ && default_->isUniform() && default_->planeCount() == layout_->planeCount() &&
            default_->sampleType() == layout_->sampleType());
 }
@@ -109,6 +114,7 @@ void TileMap::set(TileCoord coord, std::shared_ptr<const Tile> tile) {
         ++tileCount_;
     }
     slot = std::move(tile);
+    generation_ = nextGeneration();
 }
 
 void TileMap::erase(TileCoord coord) {
@@ -128,6 +134,7 @@ void TileMap::erase(TileCoord coord) {
     if (chunk->count == 0) {
         dir.erase(chunkCoord);
     }
+    generation_ = nextGeneration();
 }
 
 std::vector<TileCoord> TileMap::sortedChunks() const {

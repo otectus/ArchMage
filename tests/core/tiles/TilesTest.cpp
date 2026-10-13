@@ -165,10 +165,12 @@ TEST(TileMap, CopiesShareStorageUntilModified) {
     }
     TileMap copy = source;
     EXPECT_TRUE(copy.sharesStorageWith(source));
+    EXPECT_EQ(copy.generation(), source.generation()) << "a copy has the same content";
     const auto before = source.find({5, 1});
     copy.set({5, 1}, solidTile(0, 0, 1, 1));
     copy.set({1000, -1000}, solidTile(0, 1, 0, 1));
     EXPECT_FALSE(copy.sharesStorageWith(source));
+    EXPECT_NE(copy.generation(), source.generation());
     EXPECT_EQ(source.find({5, 1}), before) << "modifying a copy leaves the source unchanged";
     EXPECT_EQ(source.find({1000, -1000}), nullptr);
     EXPECT_EQ(source.tileCount(), 40u);

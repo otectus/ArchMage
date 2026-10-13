@@ -83,6 +83,9 @@ public:
     [[nodiscard]] static std::vector<TileCoord> changedTiles(const TileMap &a, const TileMap &b);
     /// True when both maps share all storage (a copy that has not been modified).
     [[nodiscard]] bool sharesStorageWith(const TileMap &other) const { return dir_ == other.dir_; }
+    /// Process-unique number identifying this content: copies keep it, every modification gets a new
+    /// one. Render caches key on it instead of on addresses, which can be reused.
+    [[nodiscard]] std::uint64_t generation() const { return generation_; }
 
 private:
     static constexpr int kChunkShift = 4; // 16 × 16 tiles per chunk
@@ -104,6 +107,7 @@ private:
     std::shared_ptr<const Tile> default_;
     std::shared_ptr<Directory> dir_;
     std::size_t tileCount_ = 0;
+    std::uint64_t generation_;
 };
 
 /// A set of tiles touched by an edit, in pixel or tile terms (sorted, deterministic).
