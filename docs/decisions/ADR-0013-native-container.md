@@ -36,4 +36,6 @@ opening of files that need newer capabilities.
 
 ## Evidence
 
-None yet. Schema v0.1 in S1-4.1, migration fixtures in S1-4.7.
+Schema 0.1 in `io/native/schema/0001.sql`, described in `docs/architecture/native-format.md` (S1-4).
+`NativeSchema` and `NativeFile` tests in `tests/io/native/NativeFormatTest.cpp`; the 0.1 fixture
+`tests/io/native/fixtures/v0.1.archmage` opens in `NativeMigrationTest`. Amended by ADR-0103.
