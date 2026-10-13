@@ -102,10 +102,15 @@ archmage_add_test(BlurTest
     LABELS image
     LINKS archmage_render archmage_commands)
 
+# LeakSanitizer is off for GpuTest: building the compute pipeline makes the NVIDIA driver allocate memory it
+# never frees, in driver modules the Vulkan loader unloads before exit, so the reports carry no symbols and
+# cannot be suppressed. AddressSanitizer's other checks stay on, and the validation layer reports any Vulkan
+# object ArchMage fails to destroy (the tests require zero validation errors).
 archmage_add_test(GpuTest
     SOURCES core/render/GpuTest.cpp
     LABELS image
-    LINKS archmage_gpu archmage_commands archmage_brush)
+    LINKS archmage_gpu archmage_commands archmage_brush
+    ENVIRONMENT ASAN_OPTIONS=detect_leaks=0)
 
 archmage_add_test(CommandsTest
     SOURCES core/commands/CommandsTest.cpp

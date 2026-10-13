@@ -18,6 +18,7 @@
 #include "archmage/render/CpuEvaluator.h"
 
 #include <cstdint>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -42,9 +43,12 @@ constexpr int kMaxLayers = 10000;
 
 std::ostringstream report;
 
-template <class... Args> void line(const char *format, Args... args) {
+[[gnu::format(printf, 1, 2)]] void line(const char *format, ...) {
     char buffer[1024];
-    std::snprintf(buffer, sizeof buffer, format, args...);
+    va_list args;
+    va_start(args, format);
+    std::vsnprintf(buffer, sizeof buffer, format, args);
+    va_end(args);
     report << buffer << '\n';
 }
 

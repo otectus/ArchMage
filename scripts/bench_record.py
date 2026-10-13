@@ -160,6 +160,9 @@ def main() -> int:
         "simulated": bench.get("simulated"),
         "date": started.isoformat(timespec="seconds"),
         "machine_conditions": conditions + ("" if quiet else " (recorded with --force: results are not representative)"),
+        # The revision compiled into bench_main (the record may run long after the checkout has moved on);
+        # environment.git_revision is the checkout at record time.
+        "build": bench.get("build"),
         "fixture": bench["fixture"],
         "records": {
             **bench["records"],

@@ -15,6 +15,7 @@
 #include <libraw/libraw.h>
 
 #include <algorithm>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -28,9 +29,12 @@ namespace {
 
 std::ostringstream report;
 
-template <class... Args> void line(const char *format, Args... args) {
+[[gnu::format(printf, 1, 2)]] void line(const char *format, ...) {
     char buffer[1024];
-    std::snprintf(buffer, sizeof buffer, format, args...);
+    va_list args;
+    va_start(args, format);
+    std::vsnprintf(buffer, sizeof buffer, format, args);
+    va_end(args);
     report << buffer << '\n';
 }
 

@@ -19,18 +19,36 @@ namespace {
 
 using commands::CommandEnvelope;
 
-std::shared_ptr<GpuContext> contextOrSkip() {
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define ARCHMAGE_UNDER_TSAN 1
+#endif
+#endif
+#if defined(__SANITIZE_THREAD__)
+#define ARCHMAGE_UNDER_TSAN 1
+#endif
+
+// A device, or the reason the test must skip. Under ThreadSanitizer, creating the device crashes the TSan
+// runtime itself (a SEGV on a thread the driver starts), so GPU tests do not run in the tsan preset.
+std::shared_ptr<GpuContext> contextOrSkip(std::string &reason) {
+#if defined(ARCHMAGE_UNDER_TSAN)
+    reason = "the GPU driver cannot run under ThreadSanitizer";
+    return nullptr;
+#else
     auto context = GpuContext::create(GpuContext::Options{});
     if (!context) {
+        reason = "no Vulkan device: " + base::format(context.error());
         return nullptr;
     }
     return *context;
+#endif
 }
 
 #define REQUIRE_GPU(context)                                                                                         \
-    auto context = contextOrSkip();                                                                                  \
+    std::string skipReason;                                                                                          \
+    auto context = contextOrSkip(skipReason);                                                                        \
     if (!context) {                                                                                                  \
-        GTEST_SKIP() << "no Vulkan device: " << base::format(GpuContext::create(GpuContext::Options{}).error());    \
+        GTEST_SKIP() << skipReason;                                                                                  \
     }
 
 std::vector<tiles::TileCoord> canvasTiles(const document::DocumentState &state) {
@@ -100,6 +118,9 @@ TEST(GpuContext, CreatesAndDestroysADeviceWithoutValidationErrors) {
 }
 
 TEST(GpuContext, ForcedCpuIsUnavailable) {
+#if defined(ARCHMAGE_UNDER_TSAN)
+    GTEST_SKIP() << "the GPU driver cannot run under ThreadSanitizer";
+#endif
     ::setenv("ARCHMAGE_FORCE_CPU", "1", 1);
     auto context = GpuContext::create(GpuContext::Options{});
     ::unsetenv("ARCHMAGE_FORCE_CPU");

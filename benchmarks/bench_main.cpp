@@ -16,6 +16,7 @@
 
 #include "archmage/brush/Stroke.h"
 #include "archmage/commands/MutationExecutor.h"
+#include "archmage/document/Version.h"
 #include "archmage/gpu/GpuEvaluator.h"
 #include "archmage/render/CpuEvaluator.h"
 #include "archmage/render/ViewTransform.h"
@@ -85,7 +86,9 @@ std::shared_ptr<const archmage::tiles::Tile> patternTile(int layer, archmage::ti
                 if (p == 3) {
                     v = opaque ? 255u : static_cast<std::uint32_t>(96 + ((gx / 7 + gy / 5 + layer * 13) % 128));
                 } else {
-                    v = static_cast<std::uint32_t>((gx * (p + 1) + gy * (3 - p) + layer * 37) / 23 + ((gx ^ gy) & 7));
+                    const auto channel = static_cast<std::int64_t>(p);
+                    v = static_cast<std::uint32_t>((gx * (channel + 1) + gy * (3 - channel) + layer * 37) / 23 +
+                                                   ((gx ^ gy) & 7));
                 }
                 samples[static_cast<std::size_t>(y * archmage::tiles::kTileSize + x)] = static_cast<std::uint8_t>(v & 0xffu);
             }
@@ -303,7 +306,8 @@ int main(int argc, char **argv) {
     records["small_undo"] = percentiles(undo, 100.0);
     records["small_undo"]["boundary"] = "undo of one stroke to the next frame of the fit view";
 
-    const json out{{"profile", profile},
+    const json out{{"build", archmage::document::versionBanner()}, // the revision these binaries were built from
+                   {"profile", profile},
                    {"simulated", profile == "C" ? json("ARCHMAGE_FORCE_CPU=1, 8 GiB RAM budget") : json(nullptr)},
                    {"fixture",
                     {{"generator", "benchmarks/bench_main.cpp syntheticDocument (seed 25012026)"},

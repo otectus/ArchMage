@@ -49,3 +49,10 @@ pkg_check_modules(xxHash REQUIRED IMPORTED_TARGET libxxhash>=0.8)
 pkg_check_modules(HarfBuzz REQUIRED IMPORTED_TARGET harfbuzz>=8.0)
 pkg_check_modules(FreeType2 REQUIRED IMPORTED_TARGET freetype2)
 pkg_check_modules(LibRaw REQUIRED IMPORTED_TARGET libraw_r>=0.21)
+# libraw_r.pc lists -fopenmp among its link flags (for static links); the shared library already depends
+# on libgomp. Passed to Clang, the flag would link LLVM's libomp, which is not installed, so drop it.
+get_target_property(_archmage_libraw_link_options PkgConfig::LibRaw INTERFACE_LINK_OPTIONS)
+if(_archmage_libraw_link_options)
+    list(REMOVE_ITEM _archmage_libraw_link_options -fopenmp)
+    set_target_properties(PkgConfig::LibRaw PROPERTIES INTERFACE_LINK_OPTIONS "${_archmage_libraw_link_options}")
+endif()
