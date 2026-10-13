@@ -63,4 +63,4 @@ One row per file in the corpus directory, added when the file is created or down
 
 | File | SHA-256 | Size | Source and command | License | Added |
 | --- | --- | --- | --- | --- | --- |
-| none yet | | | | | |
+| `layered-gimp-3.2.6.psd` | `acc09c066c9d12619a236ea487787bf9e99628576b431df5fda30aca7b46d8c0` | 117,738 bytes | Authored with GIMP 3.2.6 (`gimp 3.2.6-2.1`): `ARCHMAGE_PSD_OUT=<corpus>/layered-gimp-3.2.6.psd gimp-console-3.2 -i --quit --batch-interpreter=python-fu-eval -b "exec(open('benchmarks/probes/fixtures/make_psd_fixture.py').read())"` | Project-owned (authored here) | 2026-10-13 |

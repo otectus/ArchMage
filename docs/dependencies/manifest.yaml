@@ -110,7 +110,7 @@ dependencies:
   - id: libpng
     name: "libpng"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [find_package:PNG]
     source: {type: system_package, package: libpng, repository: cachyos-extra-v3, upstream: "http://www.libpng.org/pub/png/libpng.html"}
     version: "1.6.59-1.1"
