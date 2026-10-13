@@ -21,6 +21,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 option(ARCHMAGE_BUILD_TESTS "Build the test executables and register them with CTest" ON)
+# D-27: named fault points in the save, journal, checkpoint, rename and compaction paths, armed with
+# ARCHMAGE_FAULT=<spec>. On in Debug and test presets; the dev-release preset turns it off.
+option(ARCHMAGE_FAULT_INJECTION "Compile fault injection points into the durability paths" ON)
 
 include(CompilerWarnings)
 include(Sanitizers)

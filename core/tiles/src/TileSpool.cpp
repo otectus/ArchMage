@@ -37,6 +37,10 @@ void TileSpool::pruneLocked() {
 }
 
 std::uint64_t TileSpool::evict(std::uint64_t bytes) {
+    // Free at least a batch: every allocation over budget asks for room, and sorting the candidates for
+    // each 64 KiB tile would make filling a large document quadratic.
+    constexpr std::uint64_t kMinimumBatch = 16ull << 20;
+    bytes = std::max(bytes, kMinimumBatch);
     const std::lock_guard lock(mutex_);
     pruneLocked();
     std::vector<std::pair<std::uint64_t, std::shared_ptr<const Tile>>> candidates;

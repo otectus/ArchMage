@@ -42,7 +42,8 @@
       "displayName": "GCC RelWithDebInfo",
       "inherits": ["base", "gcc"],
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ARCHMAGE_FAULT_INJECTION": "OFF"
       }
     },
     {

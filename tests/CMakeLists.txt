@@ -169,6 +169,11 @@ archmage_add_test(NativeMigrationTest
     LINKS archmage_native_test_support)
 target_compile_definitions(NativeMigrationTest PRIVATE ARCHMAGE_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/io/native/fixtures")
 
+archmage_add_test(RecoveryTest
+    SOURCES io/native/RecoveryTest.cpp
+    LABELS document
+    LINKS archmage_native_test_support)
+
 archmage_add_test(At001Test
     SOURCES io/native/At001Test.cpp
     LABELS document image

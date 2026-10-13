@@ -7,6 +7,7 @@
 #include "archmage/native/Migration.h"
 #include "archmage/native/NativeFile.h"
 #include "Payloads.h"
+#include "Reader.h"
 #include "archmage/tiles/ResourceCoordinator.h"
 
 #include <algorithm>
@@ -59,7 +60,7 @@ base::Result<Statement> prepare(Database &db, std::string_view sql) { return db.
 
 // Opens the file read-only and checks that it is an ArchMage document. The manifest and previews tables are
 // the contract every schema major keeps, so a newer major can still be identified and previewed.
-base::Result<Database> openFile(const std::filesystem::path &path) {
+base::Result<Database> openFile(const std::filesystem::path &path, Database::Mode mode) {
     std::error_code ec;
     const auto status = std::filesystem::status(path, ec);
     if (ec || !std::filesystem::exists(status)) {
@@ -70,7 +71,7 @@ base::Result<Database> openFile(const std::filesystem::path &path) {
         return base::fail(ErrorCategory::UnsupportedInput, "file.not_regular", "The path is not a file",
                           path.string());
     }
-    auto db = Database::open(path, Database::Mode::ReadOnly);
+    auto db = Database::open(path, mode);
     if (!db) {
         return db;
     }
@@ -112,7 +113,7 @@ base::Status checkTables(Database &db) {
     return {};
 }
 
-base::Result<std::vector<std::pair<std::string, std::string>>> loadManifest(Database &db) {
+base::Result<std::vector<std::pair<std::string, std::string>>> manifestRows(Database &db) {
     auto statement = prepare(db, "SELECT key, value FROM manifest ORDER BY key");
     if (!statement) {
         return fail(statement.error());
@@ -748,7 +749,7 @@ private:
             !status) {
             return status;
         }
-        auto manifest = loadManifest(db_);
+        auto manifest = manifestRows(db_);
         if (!manifest) {
             return fail(manifest.error());
         }
@@ -772,22 +773,18 @@ private:
     document::PreservedContent preserved_;
 };
 
+} // namespace
+
+namespace detail {
+
 // Opens, identifies and, for a current-major file, checks tables and the revision; migrates an older minor
 // into an in-memory copy. `source` is the database to read content from.
-struct OpenFile {
-    Database file;
-    std::optional<Database> migrated;
-    FileInfo info;
-
-    Database &source() { return migrated ? *migrated : file; }
-};
-
-base::Result<OpenFile> openAndIdentify(const std::filesystem::path &path) {
-    auto db = openFile(path);
+base::Result<OpenFile> openAndIdentify(const std::filesystem::path &path, Database::Mode mode) {
+    auto db = openFile(path, mode);
     if (!db) {
         return fail(db.error());
     }
-    auto manifest = loadManifest(*db);
+    auto manifest = manifestRows(*db);
     if (!manifest) {
         return fail(manifest.error());
     }
@@ -821,7 +818,38 @@ base::Result<OpenFile> openAndIdentify(const std::filesystem::path &path) {
     return open;
 }
 
-} // namespace
+base::Result<std::vector<std::pair<std::string, std::string>>> loadManifest(Database &db) { return manifestRows(db); }
+
+base::Result<OpenedDocument> readOpen(OpenFile &open, const ReadOptions &options) {
+    OpenedDocument opened;
+    opened.info = open.info;
+    const bool understood = open.info.schemaMajor <= kSchemaMajor && open.info.readOnlyReason != "capability.unknown";
+    if (understood) {
+        auto state = StateLoader(open.source(), open.info).load();
+        if (state) {
+            opened.state = std::move(*state);
+        } else if (!open.info.readOnly) {
+            return fail(state.error());
+        }
+        // A newer minor that does not load is still shown as a preview.
+    }
+    if (options.loadPreview) {
+        loadPreview(open.source(), open.info, opened);
+    }
+    return opened;
+}
+
+OpenedDocument readPreview(OpenFile &open) {
+    OpenedDocument opened;
+    opened.info = open.info;
+    loadPreview(open.source(), open.info, opened);
+    return opened;
+}
+
+} // namespace detail
+
+using detail::OpenFile;
+using detail::openAndIdentify;
 
 const std::vector<std::string> &knownCapabilities() {
     static const std::vector<std::string> kKnown{std::string(document::kRasterLayersCapability)};
@@ -829,7 +857,7 @@ const std::vector<std::string> &knownCapabilities() {
 }
 
 base::Result<FileInfo> readFileInfo(const std::filesystem::path &path) {
-    auto open = openAndIdentify(path);
+    auto open = openAndIdentify(path, Database::Mode::ReadOnly);
     if (!open) {
         return fail(open.error());
     }
@@ -837,26 +865,11 @@ base::Result<FileInfo> readFileInfo(const std::filesystem::path &path) {
 }
 
 base::Result<OpenedDocument> readDocument(const std::filesystem::path &path, const ReadOptions &options) {
-    auto open = openAndIdentify(path);
+    auto open = openAndIdentify(path, Database::Mode::ReadOnly);
     if (!open) {
         return fail(open.error());
     }
-    OpenedDocument opened;
-    opened.info = open->info;
-    const bool understood = open->info.schemaMajor <= kSchemaMajor && open->info.readOnlyReason != "capability.unknown";
-    if (understood) {
-        auto state = StateLoader(open->source(), open->info).load();
-        if (state) {
-            opened.state = std::move(*state);
-        } else if (!open->info.readOnly) {
-            return fail(state.error());
-        }
-        // A newer minor that does not load is still shown as a preview.
-    }
-    if (options.loadPreview) {
-        loadPreview(open->source(), open->info, opened);
-    }
-    return opened;
+    return detail::readOpen(*open, options);
 }
 
 base::Result<ValidationReport> validateFile(const std::filesystem::path &path, ValidationLevel level) {
@@ -865,7 +878,7 @@ base::Result<ValidationReport> validateFile(const std::filesystem::path &path, V
     const auto examinable = [](const base::Error &error) {
         return error.category == ErrorCategory::DamagedInput || error.category == ErrorCategory::UnsupportedInput;
     };
-    auto open = openAndIdentify(path);
+    auto open = openAndIdentify(path, Database::Mode::ReadOnly);
     if (!open) {
         if (!examinable(open.error())) {
             return fail(open.error());
@@ -970,7 +983,7 @@ base::Result<ValidationReport> validateFile(const std::filesystem::path &path, V
 }
 
 base::Result<json> inspectFile(const std::filesystem::path &path) {
-    auto open = openAndIdentify(path);
+    auto open = openAndIdentify(path, Database::Mode::ReadOnly);
     if (!open) {
         return fail(open.error());
     }
@@ -983,7 +996,7 @@ base::Result<json> inspectFile(const std::filesystem::path &path) {
         out["readOnlyReason"] = info.readOnlyReason;
         out["readOnlyExplanation"] = info.readOnlyExplanation;
     }
-    auto manifest = loadManifest(db);
+    auto manifest = manifestRows(db);
     if (!manifest) {
         return fail(manifest.error());
     }

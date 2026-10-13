@@ -1,5 +1,7 @@
 #include "archmage/native/Sqlite.h"
 
+#include "archmage/native/FaultPoints.h"
+
 #include <sqlite3.h>
 
 #include <utility>
@@ -187,6 +189,9 @@ base::Result<Database> Database::openMemory() {
 }
 
 base::Status Database::copyTo(Database &destination) {
+    if (auto fault = faultPoint(FaultPoint::Backup); !fault) {
+        return fault;
+    }
     sqlite3_backup *backup = sqlite3_backup_init(destination.db_, "main", db_, "main");
     if (backup == nullptr) {
         return base::unexpected(destination.error(sqlite3_errcode(destination.db_), "backup"));
