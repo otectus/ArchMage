@@ -107,4 +107,14 @@ std::string_view blendPolicyName(BlendPolicy policy) {
     return policy == BlendPolicy::Encoded ? "encoded" : "linear";
 }
 
+std::optional<BlendPolicy> blendPolicyFromName(std::string_view name) {
+    if (name == "encoded") {
+        return BlendPolicy::Encoded;
+    }
+    if (name == "linear") {
+        return BlendPolicy::Linear;
+    }
+    return std::nullopt;
+}
+
 } // namespace archmage::color

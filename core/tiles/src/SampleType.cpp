@@ -19,6 +19,15 @@ std::string_view sampleTypeName(SampleType type) {
     return "unknown";
 }
 
+std::optional<SampleType> sampleTypeFromName(std::string_view name) {
+    for (const SampleType type : {SampleType::UInt8, SampleType::UInt16, SampleType::Float16, SampleType::Float32}) {
+        if (sampleTypeName(type) == name) {
+            return type;
+        }
+    }
+    return std::nullopt;
+}
+
 float halfToFloat(std::uint16_t half) {
     const std::uint32_t sign = static_cast<std::uint32_t>(half & 0x8000u) << 16;
     const std::uint32_t exponent = (half >> 10) & 0x1fu;

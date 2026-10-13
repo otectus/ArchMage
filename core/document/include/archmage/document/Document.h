@@ -21,10 +21,12 @@
 
 #include <nlohmann/json.hpp>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace archmage::document {
@@ -58,6 +60,59 @@ struct Layer {
     nlohmann::json extensions = nlohmann::json::object();
 };
 
+/// Content of a saved file that this version does not understand, kept so that opening and saving does not
+/// discard it (spec §6.2, §10.5): objects of unknown types (and known-type objects reachable only through
+/// them), relations other than the layer stack and layer contents, tile planes of those rasters, blobs no
+/// understood content uses, asset rows and unknown manifest keys. Written back verbatim; a relation whose
+/// endpoint no longer exists is dropped at save time and counted in the save report.
+struct PreservedContent {
+    struct Object {
+        std::string id;
+        std::string type;
+        int version = 1;
+        std::string payload; // JSON text exactly as stored
+    };
+    struct Relation {
+        std::string parent;
+        std::string kind;
+        std::int64_t ordinal = 0;
+        std::string child;
+    };
+    struct TilePlane {
+        std::string raster;
+        std::int64_t version = 0;
+        std::int64_t tx = 0;
+        std::int64_t ty = 0;
+        std::int64_t plane = 0;
+        std::optional<std::vector<std::byte>> uniform; // one sample, or
+        std::string resourceHash;                     // the blob holding the plane
+    };
+    struct Resource {
+        std::string hash; // SHA-256 hex of the raw bytes
+        std::string mediaType;
+        std::string codec;
+        int codecVersion = 0;
+        std::uint64_t rawLength = 0;
+        std::vector<std::byte> data; // encoded bytes as stored
+    };
+    struct Asset {
+        std::string id;
+        std::string kind;
+        std::string payload;
+    };
+    std::vector<Object> objects;
+    std::vector<Relation> relations;
+    std::vector<TilePlane> tilePlanes;
+    std::vector<Resource> resources;
+    std::vector<Asset> assets;
+    std::vector<std::pair<std::string, std::string>> manifest;
+
+    [[nodiscard]] bool empty() const {
+        return objects.empty() && relations.empty() && tilePlanes.empty() && resources.empty() &&
+               assets.empty() && manifest.empty();
+    }
+};
+
 struct DocumentState {
     base::DocumentId id;
     std::string title;
@@ -70,6 +125,7 @@ struct DocumentState {
     std::vector<std::shared_ptr<const Layer>> layers; // bottom to top: rendering order
     std::vector<std::string> capabilities;            // required to open the document (spec §10.1)
     nlohmann::json extensions = nlohmann::json::object();
+    std::shared_ptr<const PreservedContent> preserved; // null when the file had nothing unknown
 
     [[nodiscard]] std::optional<std::size_t> indexOf(base::LayerId layer) const;
     [[nodiscard]] const Layer *findLayer(base::LayerId layer) const;

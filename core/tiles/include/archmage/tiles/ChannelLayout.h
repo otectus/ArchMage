@@ -35,6 +35,7 @@ enum class ChannelSemantic : std::uint8_t {
 };
 
 [[nodiscard]] std::string_view channelName(ChannelSemantic semantic);
+[[nodiscard]] std::optional<ChannelSemantic> channelFromName(std::string_view name);
 
 class ChannelLayout {
 public:

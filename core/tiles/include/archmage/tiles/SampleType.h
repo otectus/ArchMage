@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <optional>
 #include <string_view>
 
 namespace archmage::tiles {
@@ -27,6 +28,7 @@ enum class SampleType : std::uint8_t { UInt8, UInt16, Float16, Float32 };
 }
 
 [[nodiscard]] std::string_view sampleTypeName(SampleType type);
+[[nodiscard]] std::optional<SampleType> sampleTypeFromName(std::string_view name);
 
 /// IEEE 754 binary16 conversions (round to nearest even; infinities and NaN preserved).
 [[nodiscard]] float halfToFloat(std::uint16_t half);
