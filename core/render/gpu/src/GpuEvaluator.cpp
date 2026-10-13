@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <chrono>
 #include <cstring>
 #include <optional>
 
@@ -262,8 +263,14 @@ struct GpuEvaluator::Pipeline {
         }
         VkMemoryRequirements requirements{};
         vkGetBufferMemoryRequirements(gpu.device, buffer.buffer, &requirements);
-        const std::uint32_t type = gpu.memoryType(
-            requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        // Cached host memory first: reading results back from uncached, write-combined memory is slow.
+        std::uint32_t type = gpu.memoryType(requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                                                                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT |
+                                                                             VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
+        if (type == UINT32_MAX) {
+            type = gpu.memoryType(requirements.memoryTypeBits,
+                                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+        }
         if (type == UINT32_MAX) {
             return base::fail(base::ErrorCategory::ProviderUnavailable, "gpu.memory_type",
                               "The GPU has no host-visible memory", "");
@@ -428,6 +435,7 @@ GpuEvaluator::renderTiles(const render::GraphNode &root, std::span<const tiles::
                 status = pipeline_->ensure(*buffer, size);
             }
         }
+        const auto gatherStarted = std::chrono::steady_clock::now();
         if (status) {
             auto *samples = static_cast<float *>(pipeline_->samples.mapped);
             auto *entries = static_cast<std::uint32_t *>(pipeline_->entries.mapped);
@@ -453,10 +461,14 @@ GpuEvaluator::renderTiles(const render::GraphNode &root, std::span<const tiles::
                 }
             }
         }
+        const auto dispatchStarted = std::chrono::steady_clock::now();
+        stats_.gatherMs += std::chrono::duration<double, std::milli>(dispatchStarted - gatherStarted).count();
         if (status) {
             status = pipeline_->run(static_cast<std::uint32_t>(tileCount));
             ++stats_.batches;
         }
+        const auto readbackStarted = std::chrono::steady_clock::now();
+        stats_.dispatchMs += std::chrono::duration<double, std::milli>(readbackStarted - dispatchStarted).count();
         if (!status) {
             if (status.error().code == "gpu.device_lost") {
                 context_->markLost();
@@ -479,6 +491,8 @@ GpuEvaluator::renderTiles(const render::GraphNode &root, std::span<const tiles::
             results.emplace_back(std::shared_ptr<const render::ImageBuffer>(std::move(buffer)));
         }
         stats_.gpuTiles += tileCount;
+        stats_.readbackMs +=
+            std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - readbackStarted).count();
         next = end;
     }
     return results;

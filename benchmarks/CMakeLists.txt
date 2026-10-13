@@ -24,3 +24,10 @@ add_executable(text_probe probes/text_probe.cpp)
 target_link_libraries(text_probe PRIVATE archmage_core archmage_probe_png PkgConfig::HarfBuzz PkgConfig::FreeType2)
 archmage_target_warnings(text_probe)
 add_dependencies(benchmarks text_probe)
+
+# S1-6.8: spec §25.2 measurements on a synthetic 24 MP, 20-layer document (offscreen Qt for the frame
+# source). scripts/bench_record.py runs it, the app's brush and launch benchmarks, and records the results.
+add_executable(bench_main bench_main.cpp)
+target_link_libraries(bench_main PRIVATE archmage_ui archmage_gpu Qt6::Gui)
+archmage_target_warnings(bench_main)
+add_dependencies(benchmarks bench_main)

@@ -1,0 +1,10 @@
+{
+  "profile": "B",
+  "status": "unavailable",
+  "reason": "No 4-8 core, 16 GiB machine with integrated graphics only is available; this machine (24 threads, 32 GiB, discrete GPU) cannot stand in for it without misrepresenting CPU and memory bandwidth.",
+  "would_run": [
+    "cmake --preset dev-release && cmake --build --preset dev-release",
+    "python3 -I scripts/bench_record.py --profile B  # on the profile B machine"
+  ],
+  "date": "2026-10-13"
+}

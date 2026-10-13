@@ -28,6 +28,9 @@ public:
         std::uint64_t cpuTiles = 0;
         std::uint64_t batches = 0;
         bool deviceLost = false;
+        double gatherMs = 0.0;   // CPU: reading layer samples into the upload buffers
+        double dispatchMs = 0.0; // submit to fence: transfer and shader execution
+        double readbackMs = 0.0; // CPU: copying results into tiles
     };
 
     GpuEvaluator(std::shared_ptr<GpuContext> context, render::CpuEvaluator &fallback);

@@ -1,0 +1,10 @@
+{
+  "profile": "D",
+  "status": "unavailable",
+  "reason": "No Apple Silicon machine is available, and Stage 1 builds for Linux only (ADR-0021).",
+  "would_run": [
+    "cmake --preset dev-release && cmake --build --preset dev-release",
+    "python3 -I scripts/bench_record.py --profile D  # on the profile D machine"
+  ],
+  "date": "2026-10-13"
+}
