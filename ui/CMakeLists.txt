@@ -4,6 +4,12 @@ archmage_add_module(ui
     SOURCES
         include/archmage/ui/MainWindow.h
         src/MainWindow.cpp
+        include/archmage/ui/DocumentView.h
+        src/DocumentView.cpp
+        include/archmage/ui/document/DocumentSession.h
+        src/document/DocumentSession.cpp
+        src/canvas/DocumentFrameSource.cpp
+        src/tools/BrushTool.cpp
         include/archmage/ui/canvas/CanvasSurface.h
         src/canvas/CanvasSurface.cpp
         include/archmage/ui/canvas/RasterCanvasSurface.h
@@ -17,6 +23,7 @@ archmage_add_module(ui
         src/canvas/LatencyTrace.cpp
         src/input/InputMapper.cpp
         src/experiments/CanvasExperiment.cpp
+        src/experiments/BrushLatencyBenchmark.cpp
     PUBLIC_LINKS
         Qt6::Widgets
         archmage_core

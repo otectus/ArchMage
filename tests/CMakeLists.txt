@@ -135,6 +135,12 @@ archmage_add_test(CanvasSurfaceTest
     LINKS archmage_ui
     QT)
 
+archmage_add_test(BrushSliceTest
+    SOURCES ui/BrushSliceTest.cpp
+    LABELS ui
+    LINKS archmage_ui
+    QT)
+
 # CLI subprocess check: archmage-cli --version exits 0 and prints the version banner.
 add_test(NAME cli.version
     COMMAND "${CMAKE_COMMAND}"

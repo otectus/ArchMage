@@ -162,6 +162,26 @@ CpuEvaluator::renderTile(const GraphNode &root, tiles::TileCoord tile, const Eva
     return result;
 }
 
+std::vector<base::Result<std::shared_ptr<const ImageBuffer>>>
+CpuEvaluator::renderTiles(const GraphNode &root, std::span<const tiles::TileCoord> coords,
+                          const EvaluationContext &context) {
+    std::vector<base::Result<std::shared_ptr<const ImageBuffer>>> results;
+    results.reserve(coords.size());
+    for (std::size_t i = 0; i < coords.size(); ++i) {
+        results.emplace_back(
+            base::fail(ErrorCategory::Internal, "render.not_run", "The tile was not rendered"));
+    }
+    std::latch done(static_cast<std::ptrdiff_t>(coords.size()));
+    for (std::size_t i = 0; i < coords.size(); ++i) {
+        post([&, i] {
+            results[i] = renderTile(root, coords[i], context);
+            done.count_down();
+        });
+    }
+    done.wait();
+    return results;
+}
+
 base::Result<RenderResult> CpuEvaluator::render(const document::DocumentState &document,
                                                 const RenderRequest &request, std::stop_token stop) {
     const std::shared_ptr<const GraphNode> root = compileGraph(document);

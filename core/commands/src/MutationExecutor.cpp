@@ -72,6 +72,21 @@ std::future<base::Result<CommandResult>> MutationExecutor::submit(CommandEnvelop
     return future;
 }
 
+void MutationExecutor::submit(CommandEnvelope envelope, Completion done) {
+    auto task = [this, envelope = std::move(envelope), done = std::move(done)] {
+        done(applyCommand(envelope));
+    };
+    if (std::this_thread::get_id() == executorThread_) {
+        task();
+        return;
+    }
+    {
+        const std::lock_guard lock(queueMutex_);
+        queue_.emplace_back(std::move(task));
+    }
+    queueReady_.notify_one();
+}
+
 base::Result<CommandResult> MutationExecutor::execute(CommandEnvelope envelope) {
     return runOnExecutor([this, envelope = std::move(envelope)] { return applyCommand(envelope); });
 }

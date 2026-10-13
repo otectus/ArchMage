@@ -2,10 +2,12 @@
 //
 // `--experiment=canvas:<raster|rhi|vulkan>` runs the S1-1 canvas adapter experiment (plan S1-1.2) instead
 // of the application: optional `--script=<step,step,...>`, `--evidence-dir=<path>` and `--snap-wait=<ms>`.
+// `--benchmark=brush-latency [--seconds=<s>] [--canvas=<pixels>]` runs the S1-3.7 brush latency benchmark.
 
 #include "archmage/document/Version.h"
 #include "archmage/ui/MainWindow.h"
 #include "archmage/ui/canvas/VulkanSupport.h"
+#include "archmage/ui/experiments/BrushLatencyBenchmark.h"
 #include "archmage/ui/experiments/CanvasExperiment.h"
 
 #include <QApplication>
@@ -14,6 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <optional>
+#include <string>
 #include <string_view>
 
 namespace {
@@ -67,7 +70,28 @@ std::optional<archmage::ui::experiments::CanvasExperimentOptions> experimentOpti
 
 } // namespace
 
+std::optional<archmage::ui::experiments::BrushLatencyOptions> benchmarkOptions(int argc, char **argv) {
+    std::optional<archmage::ui::experiments::BrushLatencyOptions> options;
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg{argv[i]};
+        if (arg == "--benchmark=brush-latency") {
+            options.emplace();
+        } else if (options && arg.substr(0, 10) == "--seconds=") {
+            options->seconds = std::stod(std::string(arg.substr(10)));
+        } else if (options && arg.substr(0, 9) == "--canvas=") {
+            options->canvasSize = std::stoi(std::string(arg.substr(9)));
+        }
+    }
+    return options;
+}
+
 int main(int argc, char *argv[]) {
+    if (const auto benchmark = benchmarkOptions(argc, argv)) {
+        QApplication::setApplicationName(QStringLiteral("archmage-experiment"));
+        QApplication::setDesktopFileName(QStringLiteral("archmage-experiment"));
+        QApplication app(argc, argv);
+        return archmage::ui::experiments::runBrushLatencyBenchmark(app, *benchmark);
+    }
     bool invalid = false;
     const auto experiment = experimentOptions(argc, argv, &invalid);
     if (invalid) {

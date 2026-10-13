@@ -61,7 +61,12 @@ public:
 
     using Precondition = std::function<base::Status(const document::DocumentState &)>;
 
+    using Completion = std::function<void(const base::Result<CommandResult> &)>;
+
     std::future<base::Result<CommandResult>> submit(CommandEnvelope envelope);
+    /// Queues a command; `done` runs on the executor thread with the result. Commands still queued when the
+    /// executor is destroyed are run first (the queue drains).
+    void submit(CommandEnvelope envelope, Completion done);
     base::Result<CommandResult> execute(CommandEnvelope envelope);
     /// Applies `envelope` only if `precondition` holds for the current state; the check and the commit
     /// happen together on the executor thread, so nothing can land in between (spec §9.3 step 2).
