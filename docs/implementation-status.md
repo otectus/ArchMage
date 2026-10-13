@@ -9,9 +9,9 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0 and S1-1 (see below). Next: S1-2, core foundation (gate G2).
-- Before starting S1-2, re-run the G1 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
-  `scripts/check-sanitizers.sh`. I-01 (C++20 versus `std::expected`) must be settled at the start of S1-2.
+- Completed: S1-0, S1-1 and S1-2 (see below). Next: S1-3, brush stroke vertical slice (gate G3).
+- Before starting S1-3, re-run the G2 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+  `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image and document tiers.
 - Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
 ## Open questions (plan §6.3)
@@ -34,7 +34,7 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 
 | ID | Issue | Raised | Needs |
 | --- | --- | --- | --- |
-| I-01 | D-02 fixes C++20, but D-23 requires `std::expected`, a C++23 feature that neither GCC 16.2.1 nor Clang (22.1.8 or 23.1.1) provides under `-std=c++20` (ADR-0002) | S1-0 | User decision before S1-2: move to C++23 (superseding ADR) or keep C++20 with an equivalent `Expected` type |
+| I-01 | D-02 fixes C++20, but D-23 requires `std::expected`, a C++23 feature that neither GCC 16.2.1 nor Clang (22.1.8 or 23.1.1) provides under `-std=c++20` (ADR-0002) | S1-0 | Closed 2026-10-13 by ADR-0101 under the user's "reasonable assumptions" direction: C++20 stays, engine code uses `archmage::base::Expected` |
 | I-02 | The native Wayland platform plugin ships in `qt6-base` (6.11.2 and 6.12.0); `qt6-wayland` only adds the Qt6WaylandCompositor libraries and is not needed (ADR-0021) | S1-0 | Nothing; consider dropping `qt6-wayland` from the prerequisites |
 | I-03 | `noto-fonts` already provides Noto Sans Devanagari; plan Q-04's font installation is unnecessary | S1-0 | Nothing |
 | I-04 | The developer session exports `QT_QPA_PLATFORMTHEME=qt6ct`; on the offscreen platform it aborts Qt tests through GTK. Qt tests now unset it (`tests/CMakeLists.txt`) | S1-0 | Nothing |
@@ -55,10 +55,10 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | M0-D3 Feature ledger | Infrastructure done in S1-0; Stage 1 child entries due in S1-9 | `docs/parity/features.yaml`, `docs/parity/report.md` |
 | M0-D4 Architecture decisions | Recorded in S1-0; D-11 provisional until G1 | `docs/decisions/ADR-0001` to `ADR-0030` |
 | M0-D5 Canvas and input prototype | Done in S1-1 | Three `CanvasSurface` adapters, `InputMapper`, `ViewTransform`; ADR-0011 |
-| M0-D6 Memory and format experiments | Not started (S1-2, S1-4, S1-6) | |
+| M0-D6 Memory and format experiments | Partly done: tile memory accounting and eviction ordering in S1-2; container and probes pending (S1-4, S1-6) | `TilesTest` (uniform tiles allocate nothing, dense tiles charge RAM, coordinator eviction order) |
 | M0-D7 Test corpus plan | Done in S1-0 | `docs/testing/corpus-plan.md` |
 | M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Done in S1-1, tablet unavailable | ADR-0011 evidence matrix; `docs/decisions/evidence/S1-1/` |
-| M0-E2 Tile compositing, blur halo, profile conversion, brush latency | Not started (S1-2, S1-3, S1-6) | |
+| M0-E2 Tile compositing, blur halo, profile conversion, brush latency | CPU tile compositing done in S1-2; blur halo, profile conversion experiment and brush latency pending (S1-3, S1-6) | `EvaluatorTest`, `KernelsTest` |
 | M0-E3 Native save, reopen, kill-during-save recovery | Not started (S1-4, S1-5) | |
 | M0-E4 Layered PSD decode probe | Not started (S1-6) | |
 | M0-E5 RAW file, shaped Arabic and Indic text, macOS GPU path | Not started (S1-6) | |
@@ -255,6 +255,95 @@ the Stage 1 default), the input pipeline tests pass, and D-11 in the plan points
 - The matrix takes about 5 minutes and briefly focuses experiment windows on headless outputs; it restores
   the active workspace and cursor afterwards.
 
-## S1-2 to S1-9
+## S1-2 Core foundation (headless): complete, 2026-10-13
+
+Work on branch `s1-2-core-foundation` (`d6346d3`, `c395249`, `65096ec`, `7c842ff`, `65b45d4`, `bec858d`,
+`d76c380`), merged to `main` in `c25613e`. The G1 checks passed on `b34a634` before work began.
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-2.1 Identifiers | Automatically tested | `core/base/Id.h`: 128-bit typed IDs from `getrandom`, `<prefix>-<26 Crockford>`; `IdTest`: round trip of 10,000 IDs, no collision over 1,000,000 draws, malformed text rejected |
+| S1-2.2 Tiles and tile maps | Automatically tested | `core/tiles`: `Tile`, `TileBuffer`, `TileMap`, `DirtyRegion`; `TilesTest`: an empty 300,000² map allocates no tiles, uniform compaction, copy-on-write (a modified copy leaves the source unchanged), overflow rejected in `denseBytes`, every finite half-float round trips |
+| S1-2.3 Resource coordinator | Automatically tested | `ResourceCoordinator`: disposable evicted before spoolable, memory without an evictor never reclaimed, reserved pool for recovery paths |
+| S1-2.4 Document model | Automatically tested | `core/document/Document.h`; `DocumentTest`: invariants, instances sharing content, structural sharing between snapshots; the 10,000-layer snapshot and edit takes 0.03 s against the 1 s budget |
+| S1-2.5 Commands, executor, history, transactions | Automatically tested | `CommandEnvelope`, `CommandRegistry`, `MutationExecutor`; `ExecutorTest`: a repeated `requestId` applies once, undo restores the identical snapshot, the clean marker follows undo past the save point, coalescing, provisional transactions with rebase, 100 concurrent submissions serialize |
+| S1-2.6 Layer commands | Automatically tested | `archmage.document.create` and nine `archmage.layer.*` commands; `CommandsTest`: validation (locked layers, unknown targets, bad parameters), results, JSON round trip of every envelope |
+| S1-2.7 Graph and CPU evaluator | Automatically tested | `GraphNode` contract, `compileGraph`, `CpuEvaluator`; `EvaluatorTest`: a three-layer document equals an independently coded reference byte for byte, cancellation stops within one tile per worker, an unchanged revision is served entirely from the cache |
+| S1-2.8 Source-over kernel | Automatically tested | `KernelsTest`: opaque over opaque, 50 % over transparent, zero alpha contributes nothing, NaN sanitized and counted, negative color kept; `EvaluatorTest`: uint8 round trips exactly for opaque pixels |
+| S1-2.9 Color skeleton | Automatically tested | `ColorProfile`, `ColorPolicy`, `ColorPipeline`; `ColorTest`: profile parse, the generated sRGB hash pinned (`de05479f…`, stable across processes), identity pipeline leaves samples untouched, linear blending rejected |
+| S1-2.10 Jobs | Automatically tested | `JobScheduler`; `ExecutorTest`: a job finishing after its target layer was deleted or moved becomes a candidate and nothing is applied |
+| S1-2.11 Structured errors | Automatically tested | `core/base/Error.h`; every category formats (`ExpectedTest`); used by every S1-2 API |
+
+### Exit gate G2
+
+Met: `ctest -L "math|operation|document|image"` is green under `dev-debug` and `asan-ubsan`, the
+architecture overview names the real types, and the 10,000-layer snapshot runs in well under 1 s.
+
+### Commands and results (on `c25613e`, 2026-10-13)
+
+| Command | Result |
+| --- | --- |
+| `ctest --preset dev-debug -L "math\|operation\|document\|image"` | 96/96 |
+| `ctest --preset asan-ubsan -L "math\|operation\|document\|image"` | 96/96 |
+| `scripts/check.sh` | exit 0; 97/97 non-UI tests; manifest and ledger checks pass |
+| `scripts/check-ui.sh` | exit 0; 3/3 |
+| `scripts/check-sanitizers.sh` | exit 0; 100/100; 0 compiler warnings |
+| `cmake --preset tsan && cmake --build --preset tsan && ctest --preset tsan -L "operation\|image\|document"` | 43/43, no ThreadSanitizer reports, 0 compiler warnings |
+| `cmake --preset ci && cmake --build --preset ci && ctest --preset ci` | 0 warnings with `-Werror`; 100/100 |
+| `clang-format --dry-run --Werror` on every new or changed C++ file | clean |
+
+### Deviations from the plan
+
+1. A new `core/base` module holds identifiers, errors, geometry, checked arithmetic, random bytes and
+   SHA-256 (ADR-0102), instead of `core/document`; `Geometry.h` moved there from `core/tiles`.
+2. `archmage::base::Expected` replaces `std::expected` under C++20 (ADR-0101, closes I-01).
+3. Error categories add `validation` and `conflict` to the spec §26.2 list; commands need both (App. A.2).
+4. SHA-256 arrived in S1-2 rather than S1-4.2: the pinned sRGB hash (S1-2.9) needs it.
+5. `TileMap` copies on write per 16 × 16-tile chunk and carries a content generation number, which render
+   cache keys use instead of addresses.
+6. Coalescing uses the App. A.2 transaction field: commands sharing an implicit transaction ID merge into
+   one history entry; explicitly begun transactions stay provisional and rebase by replay on commit.
+7. `MutationExecutor::executeIf` checks a precondition atomically with the commit; jobs use it.
+8. Document creation is `createDocument()` under the command ID `archmage.document.create`; it has no prior
+   state, so it is not applied through the executor.
+9. Locks: rename, visibility and reordering are allowed on a locked layer; opacity, offset and removal are
+   rejected.
+10. Alpha is clamped to [0, 1] when compositing (coverage); color samples keep out-of-range float values
+    (D-09).
+11. ThreadSanitizer already ran in S1-2 (the plan starts it in S1-5) because the executor, jobs and
+    evaluator are threaded.
+
+### Progress report (plan §8.2)
+
+#### S1-2 Core foundation (headless), 2026-10-13
+
+- **Implemented outcomes:** typed identifiers, structured errors and `Expected`; sparse copy-on-write
+  tiles with memory accounting; the immutable document model with revisions; commands with an
+  idempotent serialized executor, exact undo, a clean save point, coalescing and preview transactions;
+  jobs with stale-result candidates; ICC profiles and the named color pipeline; the CPU evaluator with
+  the spec §7.4 source-over kernel, cancellation and a tile cache.
+- **Changed modules:** new `core/base`; `core/tiles`, `core/document`, `core/commands`, `core/render`,
+  `core/color` gained their first real code; `core/brush` is still empty.
+- **Passing evidence (commands and result paths):** the table above.
+- **Manual validation (what, how, platform):** none; S1-2 is headless.
+- **Performance changes (benchmark result file):** none recorded; the 10,000-layer snapshot sanity check
+  took 0.03 s.
+- **Migrations:** none.
+- **Dependency changes (manifest diff):** none; OpenSSL, xxHash, Little CMS and nlohmann-json, already in
+  the manifest, are now linked.
+- **Open risks:** the evaluator's thread pool must not be re-entered from its own workers (documented);
+  history keeps whole states, so memory grows with edits until S1-5's history budget enforcement.
+- **State by behavior:** every S1-2 behavior is automatically tested; nothing is manually tested or
+  verified against a benchmark.
+- **Sample document:** none; samples start in S1-4.
+
+### Notes for the next session
+
+- `CpuEvaluator::render` must not be called from one of its own worker threads (it waits on a latch).
+- Executor observers run on the executor thread; UI code must marshal to the GUI thread.
+
+## S1-3 to S1-9
 
 Not started.
