@@ -28,7 +28,7 @@ std::shared_ptr<const Layer> paint(const std::shared_ptr<const Layer> &layer, co
     for (std::int64_t ty = range.y0; ty < range.y1; ++ty) {
         for (std::int64_t tx = range.x0; tx < range.x1; ++tx) {
             const tiles::TileCoord coord{tx, ty};
-            tiles::TileBuffer buffer(*content->tiles.at(coord));
+            tiles::TileBuffer buffer = *tiles::TileBuffer::copyOf(*content->tiles.at(coord));
             const IRect part = tiles::tilePixelRect(coord).intersected(rect);
             for (std::int64_t y = part.y0; y < part.y1; ++y) {
                 for (std::int64_t x = part.x0; x < part.x1; ++x) {

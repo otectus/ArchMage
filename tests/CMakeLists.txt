@@ -169,6 +169,11 @@ archmage_add_test(NativeMigrationTest
     LINKS archmage_native_test_support)
 target_compile_definitions(NativeMigrationTest PRIVATE ARCHMAGE_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/io/native/fixtures")
 
+archmage_add_test(RecoveryTest
+    SOURCES io/native/RecoveryTest.cpp
+    LABELS document
+    LINKS archmage_native_test_support)
+
 archmage_add_test(At001Test
     SOURCES io/native/At001Test.cpp
     LABELS document image
@@ -188,3 +193,50 @@ add_test(NAME cli.native
         -D "WORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli-native"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cli/CheckNativeCli.cmake")
 set_tests_properties(cli.native PROPERTIES LABELS interchange)
+
+# Resilience (S1-5): fault points, AT-013 kill during save, AT-014 disk exhaustion. The AT tests run
+# archmage-cli's hidden self-test subcommands as child processes.
+add_library(archmage_child_process STATIC resilience/ChildProcess.cpp)
+target_include_directories(archmage_child_process PUBLIC resilience)
+archmage_target_warnings(archmage_child_process)
+
+archmage_add_test(FaultPointsTest
+    SOURCES resilience/FaultPointsTest.cpp
+    LABELS resilience
+    LINKS archmage_native_test_support)
+
+archmage_add_test(KillDuringSaveTest
+    SOURCES resilience/KillDuringSaveTest.cpp
+    LABELS resilience
+    LINKS archmage_native_test_support archmage_child_process)
+target_compile_definitions(KillDuringSaveTest PRIVATE ARCHMAGE_CLI="$<TARGET_FILE:archmage-cli>")
+add_dependencies(KillDuringSaveTest archmage-cli)
+
+archmage_add_test(DiskFullTest
+    SOURCES resilience/DiskFullTest.cpp
+    LABELS resilience
+    LINKS archmage_native_test_support archmage_child_process)
+target_compile_definitions(DiskFullTest PRIVATE ARCHMAGE_CLI="$<TARGET_FILE:archmage-cli>")
+add_dependencies(DiskFullTest archmage-cli)
+
+# Malformed native corpus (S1-5.7), generated from the fixture at test time.
+find_package(Python3 3.12 REQUIRED COMPONENTS Interpreter)
+archmage_add_test(NativeCorpusTest
+    SOURCES resilience/NativeCorpusTest.cpp
+    LABELS resilience
+    LINKS archmage_native_test_support archmage_child_process)
+target_compile_definitions(NativeCorpusTest PRIVATE
+    ARCHMAGE_PYTHON="${Python3_EXECUTABLE}"
+    ARCHMAGE_CORPUS_SCRIPT="${CMAKE_CURRENT_SOURCE_DIR}/resilience/corpus/make_native_corpus.py"
+    ARCHMAGE_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/io/native/fixtures/v0.1.archmage")
+
+# CLI subprocess check (S1-5.9): recover lists, writes a new file and never overwrites. Needs the fault
+# points to make a session die while journaling.
+if(ARCHMAGE_FAULT_INJECTION)
+    add_test(NAME cli.recover
+        COMMAND "${CMAKE_COMMAND}"
+            -D "CLI=$<TARGET_FILE:archmage-cli>"
+            -D "WORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/cli-recover"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cli/CheckRecoverCli.cmake")
+    set_tests_properties(cli.recover PROPERTIES LABELS interchange)
+endif()

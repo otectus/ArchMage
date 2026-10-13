@@ -141,6 +141,10 @@ base::Status LayerSourceNode::evaluateOver(const EvaluationContext &context, Ima
             if (!tile) {
                 continue; // default tiles are transparent (bounds_ excludes the rest)
             }
+            auto pinned = tile->pin(); // a spooled tile is read back from the recovery journal (D-26)
+            if (!pinned) {
+                return base::unexpected(std::move(pinned).error());
+            }
             const auto count = static_cast<std::size_t>(part.width());
             for (std::int64_t y = part.y0; y < part.y1; ++y) {
                 float *out = dst.pixel(part.x0 + layer_->offset.x, y + layer_->offset.y);

@@ -1,9 +1,10 @@
 # ArchMage architecture overview
 
-Status: S1-4. The headless core exists: vocabulary types, tiles, the document model, commands with an
+Status: S1-5. The headless core exists: vocabulary types, tiles, the document model, commands with an
 executor and jobs, color profiles, the CPU evaluator and the brush; the interim window paints on a
 document canvas (S1-3); documents save to and open from `.archmage` files (S1-4,
-`docs/architecture/native-format.md`). Recovery and the shell are planned design from
+`docs/architecture/native-format.md`); a recovery journal, tile spooling and fault injection exist
+headlessly (S1-5, `docs/architecture/recovery.md`). The shell is planned design from
 `docs/plans/Stage1_Development_Plan.md` and its ADRs in `docs/decisions/`. The "Contents" column lists
 what exists today.
 
@@ -35,15 +36,15 @@ the job model (S1-2.10) is the seam they will use (plan A-15).
 | `core/base/` | `archmage_base` | `archmage::base` | Vocabulary types (ADR-0102) | no | `Expected`, `Error` (ADR-0101), typed `Id`, `Geometry.h` (`IRect`, `DRect`), checked arithmetic, `secureRandomBytes`, `Sha256` | S1-2 |
 | `core/document/` | `archmage_document` | `archmage::document` | Document graph, revisions, resource references, invariants | no | `Version.h`; `Document.h`: `DocumentState`, `Layer`, `RasterContent`, `Revision`, `validate()` | S1-2 |
 | `core/commands/` | `archmage_commands` | `archmage::commands` | Operations, validation, transactions, undo descriptions | no | `CommandEnvelope`, `CommandDefinition`, `CommandRegistry`, `createDocument`, Stage 1 layer commands, `MutationExecutor`, `JobScheduler` | S1-2 |
-| `core/tiles/` | `archmage_tiles` | `archmage::tiles` | Sparse tile storage, sharing, cache, storage-backed eviction | no | `SampleType`, `ChannelLayout`, `Tile`, `TileBuffer`, `TileMap` (chunked copy-on-write), `DirtyRegion`, `ResourceCoordinator` | S1-2, S1-5 |
+| `core/tiles/` | `archmage_tiles` | `archmage::tiles` | Sparse tile storage, sharing, cache, storage-backed eviction | no | `SampleType`, `ChannelLayout`, `Tile` (pins, spooling), `TileBuffer`, `TileMap` (chunked copy-on-write), `DirtyRegion`, `ResourceCoordinator`, `TileSpool` | S1-2, S1-5 |
 | `core/render/` | `archmage_render` | `archmage::render` | Evaluation graph, scheduler, CPU kernels, GPU backend contracts | no | `ViewTransform`; `GraphNode`, `LayerSourceNode`, `CompositeNode`, `compileGraph`; source-over kernels; `CpuEvaluator` with `RenderRequest` | S1-1, S1-2, S1-6 |
 | `core/color/` | `archmage_color` | `archmage::color` | Profiles, conversions, view transforms, proofing | no | `ColorProfile` (Little CMS, pinned sRGB), `ColorPolicy`, `ColorPipeline`, `iccTransform` | S1-2, S1-6 |
 | `core/brush/` | `archmage_brush` | `archmage::brush` | Input processing, brush engines, stroke replay and deltas | no | `Stroke.h`: `BrushSettings`, `StrokeResampler`, round dabs, `StrokeMask`, `paintLayer`, `StrokeSession` | S1-3 |
-| `io/native/` | `archmage_native` | `archmage::native` | `.archmage` container, save transaction, recovery workspace | no | schema 0.1 (`schema/0001.sql`), `Database`/`Statement` (SQLite), `Blob` codec, `writeDocument`, `readDocument`, `validateFile`, `inspectFile`, `saveDocument`, migrations, `Platform` (statfs, fsync, rename) | S1-4, S1-5 |
+| `io/native/` | `archmage_native` | `archmage::native` | `.archmage` container, save transaction, recovery workspace | no | schema 0.1 (`schema/0001.sql`), `Database`/`Statement` (SQLite), `Blob` codec, `writeDocument`, `readDocument`, `validateFile`, `inspectFile`, `saveDocument`, migrations, `Platform` (statfs, fsync, rename); `Recovery.h` (`RecoverySession`, `DocumentJournal`, discovery), `FaultPoints.h` | S1-4, S1-5 |
 | `io/formats/` | `archmage_formats` | `archmage::formats` | PNG and JPEG codecs behind adapters | no | none (INTERFACE) | S1-8 |
 | `ui/` | `archmage_ui` | `archmage::ui` | Tools, panels, canvas interaction, accessibility, themes | yes | interim `MainWindow` (one document, brush, undo and redo); `document/` (`DocumentSession`), `DocumentView`, `tools/` (`BrushTool`); `canvas/` (`CanvasSurface` with raster, QRhiWidget and QVulkanWindow adapters, ADR-0011; `DocumentFrameSource`), `input/` (`InputMapper`), `experiments/` (S1-1 harness, brush latency benchmark) | S1-1, S1-3, S1-7, S1-8 |
 | `apps/archmage/` | `archmage` | n/a | Desktop executable | yes | opens `MainWindow`; `--experiment=canvas:<kind>` runs the S1-1 harness; `--benchmark=brush-latency` (S1-3.7) | S1-7, S1-8 |
-| `apps/archmage-cli/` | `archmage-cli` | n/a | Headless validate, inspect, render, recover | no | `--version`, `validate [--deep] [--json]`, `inspect [--json]` | S1-4, S1-5, S1-8 |
+| `apps/archmage-cli/` | `archmage-cli` | n/a | Headless validate, inspect, render, recover | no | `--version`, `validate [--deep] [--json]`, `inspect [--json]`, `recover [--session --output] [--json]`; hidden `selftest-save` and `selftest-disk-full` for AT-013 and AT-014 | S1-4, S1-5, S1-8 |
 
 Canvas presentation (ADR-0011): every surface presents a CPU-rendered frame through `CanvasSurface`;
 `CanvasSurface::defaultKind()` is raster unless `ARCHMAGE_CANVAS` selects `vulkan` or `rhi`. Shaders
@@ -75,7 +76,7 @@ abbreviated git commit (with `-dirty` when tracked files differ). `archmage-cli 
 | `MutationExecutor` thread (one per document) | Command validation and commits | Serializes every mutation; `requestId` idempotency; observers run here after each change |
 | `CpuEvaluator` workers (`std::jthread`, `max(2, hardware_concurrency − 2)`) | Tile evaluation | `std::stop_token` cancellation per render; output tile cache under one mutex |
 | `JobScheduler` workers | Long-running jobs | Read an immutable source revision; commit through `executeIf` or keep a candidate (spec §9.3) |
-| Recovery journal (one per session, S1-5) | Writes committed revisions every 2 s while dirty | Never blocks the executor; tracks durability per revision |
+| Recovery journal (one per session) | Writes committed revisions every 2 s while dirty | Never blocks the executor (it observes revisions); tracks durability per revision; spooled tiles read back through a separate connection |
 
 Data flow: a command envelope reaches the executor, which applies its `CommandDefinition` to the current
 immutable `DocumentState` and publishes a new `Revision`; undo moves the history cursor back to an earlier
@@ -87,5 +88,6 @@ CPU evaluator, keyed by `TileMap::generation()` and node parameters.
 - Decisions: `docs/decisions/ADR-0001` to `ADR-0030`, one per plan decision D-01 to D-30; ADR-0101
   onward record decisions made during implementation.
 - Native files and the save transaction: `docs/architecture/native-format.md`.
+- Recovery, spooling and fault injection: `docs/architecture/recovery.md`.
 - Dependencies: `docs/dependencies/manifest.yaml`.
 - Current state and evidence: `docs/implementation-status.md`.

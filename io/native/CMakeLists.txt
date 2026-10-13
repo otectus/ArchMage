@@ -9,14 +9,20 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_
 archmage_add_module(native
     SOURCES
         src/Blob.cpp
+        src/FaultPoints.cpp
         src/Migration.cpp
         src/NativeReader.cpp
         src/NativeWriter.cpp
         src/Payloads.cpp
         src/Platform.cpp
+        src/Recovery.cpp
         src/SaveTransaction.cpp
         src/Sqlite.cpp
+        src/Writer.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/generated/Format.cpp"
     PUBLIC_LINKS archmage_core nlohmann_json::nlohmann_json
     PRIVATE_LINKS SQLite3::SQLite3 zstd::libzstd_shared)
 target_include_directories(archmage_native PRIVATE src)
+if(ARCHMAGE_FAULT_INJECTION)
+    target_compile_definitions(archmage_native PUBLIC ARCHMAGE_FAULT_INJECTION)
+endif()

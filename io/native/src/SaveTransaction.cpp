@@ -1,6 +1,7 @@
 #include "archmage/native/SaveTransaction.h"
 
 #include "archmage/base/Random.h"
+#include "archmage/native/FaultPoints.h"
 #include "archmage/native/Sqlite.h"
 #include "Payloads.h"
 
@@ -22,9 +23,10 @@ std::filesystem::path temporaryBeside(const std::filesystem::path &target) {
     return target.parent_path() / (target.filename().string() + std::string(kTemporaryMarker) + hexOf(random));
 }
 
-// Prefixes an error with the step it happened in.
-base::Error atStep(SaveStep step, base::Error error) {
-    error.detail = std::string(saveStepName(step)) + ": " + error.detail;
+// Prefixes an error with the step it happened in and the file it was saving (spec §26.2: identify the
+// affected operation).
+base::Error atStep(SaveStep step, const std::filesystem::path &target, base::Error error) {
+    error.detail = std::string(saveStepName(step)) + " " + target.string() + ": " + error.detail;
     return error;
 }
 
@@ -126,16 +128,36 @@ base::Result<SaveOutcome> saveDocument(const SaveRequest &request) {
     outcome.filesystem = request.filesystem ? *request.filesystem : filesystemInfo(directory);
     outcome.atomicReplace = outcome.filesystem.atomicRename;
 
+    // Before each step: the caller's hook, then the step's fault point (D-27).
     const auto step = [&](SaveStep which) -> base::Status {
         if (request.hook) {
             if (auto status = request.hook(which); !status) {
-                return base::unexpected(atStep(which, status.error()));
+                return base::unexpected(atStep(which, target, status.error()));
+            }
+        }
+        std::optional<FaultPoint> point;
+        switch (which) {
+        case SaveStep::BackupPrevious:
+            point = FaultPoint::Backup;
+            break;
+        case SaveStep::Replace:
+            point = FaultPoint::Rename;
+            break;
+        case SaveStep::SyncDirectory:
+            point = FaultPoint::DirSync;
+            break;
+        default:
+            break;
+        }
+        if (point) {
+            if (auto fault = faultPoint(*point); !fault) {
+                return base::unexpected(atStep(which, target, fault.error()));
             }
         }
         return {};
     };
-    const auto failed = [](SaveStep which, base::Status status) {
-        return base::Unexpected<base::Error>(atStep(which, std::move(status).error()));
+    const auto failed = [&](SaveStep which, base::Status status) {
+        return base::Unexpected<base::Error>(atStep(which, target, std::move(status).error()));
     };
 
     // Step 2: materialize the revision beside the target.
@@ -148,12 +170,12 @@ base::Result<SaveOutcome> saveDocument(const SaveRequest &request) {
     }
     auto db = Database::open(temporary.path(), Database::Mode::ReadWriteCreate);
     if (!db) {
-        return base::unexpected(atStep(SaveStep::WriteTemporary, db.error()));
+        return base::unexpected(atStep(SaveStep::WriteTemporary, target, db.error()));
     }
     auto written = writeDocument(*db, *request.revision,
                                  WriteOptions{request.identity.id, request.identity.derivedFrom, request.previewMaxSize});
     if (!written) {
-        return base::unexpected(atStep(SaveStep::WriteTemporary, written.error()));
+        return base::unexpected(atStep(SaveStep::WriteTemporary, target, written.error()));
     }
     outcome.report = *written;
 
@@ -177,10 +199,10 @@ base::Result<SaveOutcome> saveDocument(const SaveRequest &request) {
     }
     auto validation = validateFile(temporary.path(), ValidationLevel::Quick);
     if (!validation) {
-        return base::unexpected(atStep(SaveStep::Validate, validation.error()));
+        return base::unexpected(atStep(SaveStep::Validate, target, validation.error()));
     }
     if (!validation->valid()) {
-        return base::unexpected(atStep(SaveStep::Validate, validation->problems.front()));
+        return base::unexpected(atStep(SaveStep::Validate, target, validation->problems.front()));
     }
     if (validation->info.documentId != request.identity.id ||
         validation->info.revisionId != request.revision->id.toString()) {
@@ -214,7 +236,7 @@ base::Result<SaveOutcome> saveDocument(const SaveRequest &request) {
         return base::unexpected(status.error());
     }
     if (auto status = replaceFile(temporary.path(), target); !status) {
-        base::Error error = atStep(SaveStep::Replace, status.error());
+        base::Error error = atStep(SaveStep::Replace, target, status.error());
         if (!outcome.backup.empty()) {
             error.detail += "; the previous file is kept at " + outcome.backup.string();
         }

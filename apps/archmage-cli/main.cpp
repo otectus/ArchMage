@@ -5,6 +5,8 @@
 // structured records {category, code, message, detail}: in the JSON document with --json, otherwise one
 // line on stderr. Nothing waits for input.
 
+#include "Commands.h"
+
 #include "archmage/document/Version.h"
 #include "archmage/native/NativeFile.h"
 
@@ -18,29 +20,12 @@
 namespace {
 
 using archmage::base::Error;
+using archmage::cli::errorRecord;
+using archmage::cli::kExitError;
+using archmage::cli::kExitInvalid;
+using archmage::cli::kExitOk;
+using archmage::cli::reportError;
 using nlohmann::json;
-
-// Exit codes shared by every subcommand (App. A.4, plan S1-4.8): 0 ok, 1 invalid input, 2 error.
-constexpr int kExitOk = 0;
-constexpr int kExitInvalid = 1;
-constexpr int kExitError = 2;
-
-json errorRecord(const Error &error) {
-    return {{"category", std::string(archmage::base::categoryName(error.category))},
-            {"code", error.code},
-            {"message", error.message},
-            {"detail", error.detail}};
-}
-
-// A file that could not be examined at all (missing, unreadable): exit 2.
-int reportError(const Error &error, bool asJson) {
-    if (asJson) {
-        std::cout << json{{"ok", false}, {"error", errorRecord(error)}}.dump(2) << '\n';
-    } else {
-        std::cerr << "archmage-cli: " << archmage::base::format(error) << '\n';
-    }
-    return kExitError;
-}
 
 int runValidate(const std::string &file, bool deep, bool asJson) {
     using archmage::native::ValidationLevel;
@@ -151,6 +136,30 @@ int run(int argc, char **argv) {
     inspect->add_option("file", inspectFile, "The .archmage file")->required();
     inspect->add_flag("--json", inspectJson, "Print the description as JSON");
 
+    archmage::cli::RecoverOptions recoverOptions;
+    CLI::App *recover = app.add_subcommand(
+        "recover", "List documents left by sessions that did not end normally, or write one to a new file");
+    recover->add_option("--session", recoverOptions.session, "Session to recover from (see the list)");
+    recover->add_option("--document", recoverOptions.document, "Document within the session, when it has several");
+    recover->add_option("--output", recoverOptions.output, "New file to write; an existing file is never replaced");
+    recover->add_option("--root", recoverOptions.root, "Recovery folder (default: the standard location)");
+    recover->add_flag("--json", recoverOptions.asJson, "Print the list or the result as JSON");
+
+    // Child processes of the resilience tests (AT-013, AT-014); not for users.
+    archmage::cli::SelfTestSaveOptions saveTest;
+    CLI::App *selftestSave = app.add_subcommand("selftest-save", "Resilience test child (AT-013)")->group("");
+    selftestSave->add_option("--root", saveTest.root)->required();
+    selftestSave->add_option("--target", saveTest.target)->required();
+    selftestSave->add_option("--fault", saveTest.fault)->required();
+    selftestSave->add_option("--phase", saveTest.phase)->check(CLI::IsMember({"journal", "save"}));
+    selftestSave->add_flag("--fallback", saveTest.fallback);
+    archmage::cli::SelfTestDiskFullOptions diskTest;
+    CLI::App *selftestDisk = app.add_subcommand("selftest-disk-full", "Resilience test child (AT-014)")->group("");
+    selftestDisk->add_option("--root", diskTest.root)->required();
+    selftestDisk->add_option("--target", diskTest.target)->required();
+    selftestDisk->add_option("--save-as", diskTest.saveAs)->required();
+    selftestDisk->add_option("--mode", diskTest.mode)->check(CLI::IsMember({"rlimit", "enospc"}));
+
     try {
         app.parse(argc, argv);
     } catch (const CLI::ParseError &error) {
@@ -163,6 +172,15 @@ int run(int argc, char **argv) {
     }
     if (inspect->parsed()) {
         return runInspect(inspectFile, inspectJson);
+    }
+    if (recover->parsed()) {
+        return archmage::cli::runRecover(recoverOptions);
+    }
+    if (selftestSave->parsed()) {
+        return archmage::cli::runSelfTestSave(saveTest);
+    }
+    if (selftestDisk->parsed()) {
+        return archmage::cli::runSelfTestDiskFull(diskTest);
     }
     std::cout << app.help();
     return kExitOk;

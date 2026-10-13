@@ -37,7 +37,11 @@ public:
         std::size_t dabs = 0;
         CommandEffect effect{
             state, settings->mode == brush::PaintMode::Erase ? "Eraser" : "Brush Stroke", {}};
-        effect.state.layers[*state.indexOf(*target)] = brush::paintLayer(layer, *settings, *samples, &dabs);
+        auto painted = brush::paintLayer(layer, *settings, *samples, &dabs);
+        if (!painted) {
+            return base::unexpected(std::move(painted).error());
+        }
+        effect.state.layers[*state.indexOf(*target)] = std::move(*painted);
         effect.result["dabs"] = dabs;
         if (!layer.visible) {
             effect.result["warning"] = "layer.hidden"; // allowed, but the user cannot see the result

@@ -170,7 +170,9 @@ TEST(NativeFile, Float32SamplesSurviveBitForBit) {
     auto state = std::make_shared<document::DocumentState>(*doc.executor->current()->state);
     auto layer = std::make_shared<document::Layer>(*state->layers[1]);
     auto content = std::make_shared<document::RasterContent>(*layer->content);
-    tiles::TileBuffer buffer(*content->tiles.at({1, 0}));
+    auto copied = tiles::TileBuffer::copyOf(*content->tiles.at({1, 0}));
+    ASSERT_TRUE(copied);
+    tiles::TileBuffer &buffer = *copied;
     buffer.setSample(0, 3, 4, -0.25f);
     buffer.setSample(1, 5, 6, 7.5f);
     buffer.setSample(2, 7, 8, std::numeric_limits<float>::quiet_NaN());

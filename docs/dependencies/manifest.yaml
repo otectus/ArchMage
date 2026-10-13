@@ -451,7 +451,7 @@ dependencies:
     name: "Python"
     category: development_tool
     usage: build_time
-    lookups: []
+    lookups: [find_package:Python3]
     source: {type: system_package, package: python, repository: cachyos-v3, upstream: "https://www.python.org/"}
     version: "3.14.7-2"
     checksum: sha256:0e9a5d3e712ce85578a6eb452c74b0df898c2bb71b780a2b42f432a617e98043
@@ -459,7 +459,7 @@ dependencies:
     license: ["PSF-2.0"]
     redistribution: "Scripts and checks only; not distributed with ArchMage."
     maintenance: "maintained; distribution package built 2026-08-14"
-    affects: ["feature ledger report (scripts/parity_report.py)", "manifest test (tests/docs/manifest_test.py)"]
+    affects: ["feature ledger report (scripts/parity_report.py)", "manifest test (tests/docs/manifest_test.py)", "malformed native corpus generator (tests/resilience/corpus, S1-5.7)"]
 
   - id: python-yaml
     name: "PyYAML"

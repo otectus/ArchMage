@@ -1,10 +1,10 @@
 # Native document format, schema 0.1
 
-Status: S1-4. Describes what `io/native` writes and reads today: the `.archmage` container (spec §10.1,
+Status: S1-5. Describes what `io/native` writes and reads today: the `.archmage` container (spec §10.1,
 ADR-0013), the save transaction (spec §10.3, ADR-0103), compatibility rules (spec §10.5) and the
 `archmage-cli validate` and `inspect` commands (App. A.4). Schema major 0 is pre-release: it may change at
 any minor until the major-1 freeze at the M2 exit, and every minor keeps a migration step and a fixture.
-The recovery workspace (D-14) arrives in S1-5 and is not described here.
+Recovery journals use the same schema; `docs/architecture/recovery.md` describes them.
 
 Code: `io/native/schema/0001.sql` (the DDL, embedded at build time), `io/native/src/NativeWriter.cpp`,
 `NativeReader.cpp`, `Payloads.cpp`, `SaveTransaction.cpp`, `Migration.cpp`, `Platform.cpp`.
@@ -160,9 +160,11 @@ settings: `SQLITE_DBCONFIG_DEFENSIVE`, no trusted schema, no double-quoted strin
 value limit. The reader refuses a file whose eight tables are not real tables (a view of the same name
 could run SQL on read), parses every payload as untrusted JSON with type and range checks, rejects
 duplicate stack entries, missing contents and dangling references, bounds tile coordinates, checks the RAM
-budget (D-26) before loading a raster's dense tiles, verifies every blob it decodes, and finally runs
-`document::validate`. Stage 1 loads every tile on open; lazy loading belongs with the recovery workspace
-and spooling (S1-5).
+budget (D-26) before loading a raster's dense tiles, verifies every blob it decodes, rejects containment
+cycles among relations (`file.cyclic_relation`, spec §6.2), and finally runs `document::validate`. Stage 1
+loads every tile on open; once journaled, tiles can be spooled out of memory (`docs/architecture/recovery.md`).
+`tests/resilience/corpus/make_native_corpus.py` generates the malformed corpus that `NativeCorpusTest` and
+the fuzzer use.
 
 ## Save transaction (spec §10.3)
 
@@ -188,11 +190,13 @@ and spooling (S1-5).
 
 Failure handling: any failure before the rename removes the temporary file and leaves the target as it
 was; the error's detail starts with the step name (`write_temporary`, `close_temporary`, `validate`,
-`sync_temporary`, `backup_previous`, `replace`, `sync_directory`). A failure of the final directory `fsync`
+`sync_temporary`, `backup_previous`, `replace`, `sync_directory`) and the target path. A full disk, a quota
+or a file-size limit is `resource_exhausted` (SQLite's I/O errors are refined with the system `errno`). A failure of the final directory `fsync`
 is reported although the new file is already in place. In the fallback, a failed rename leaves the target
 missing and the error names the backup. Saving through a symbolic link writes the file it names and keeps
-the link. `SaveRequest::hook` runs before each step; tests use it to fail each step, and fault injection
-(D-27) will drive it in S1-5. `strayTemporaries(target)` finds temporary files left by interrupted saves.
+the link. `SaveRequest::hook` runs before each step; tests use it to fail each step. The fault points
+`tile_write`, `tx_commit`, `backup`, `rename` and `dir_sync` (D-27) sit in the same sequence
+(`docs/architecture/recovery.md`). `strayTemporaries(target)` finds temporary files left by interrupted saves.
 
 Filesystems are recognized with `statfs(2)`:
 
@@ -233,7 +237,7 @@ is an error (exit 2); a file examined and found wrong is invalid (exit 1).
 
 - Benchmark page size, indices and blob sizes on large documents; Stage 1 uses SQLite's default 4 KiB pages.
 - Compaction and history storage (`revisions` holds one row; previous revisions are not kept).
-- Lazy tile loading and spooling instead of loading every tile on open (S1-5).
+- Lazy tile loading on open (journaled tiles can already be spooled, S1-5).
 - Migrations copy the whole file into memory; large files need a temporary-file copy.
 - Big-endian hosts would need byte swapping of tile planes; only little-endian Linux is built (D-21).
 - Previews are nearest-sampled; a filtered thumbnail needs mip levels (S1-6 or later).

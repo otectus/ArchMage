@@ -77,6 +77,12 @@ void BrushTool::begin(const input::PointerSample &sample) {
 void BrushTool::extend(const input::PointerSample &sample) {
     const brush::StrokeSample stroke = toStrokeSample(sample);
     session_->add(std::span(&stroke, 1));
+    if (!session_->status()) {
+        // A tile could not be read back from the recovery journal: nothing more of this stroke can be shown.
+        host_->reportError(QString::fromStdString(session_->status().error().message));
+        cancel();
+        return;
+    }
     host_->showPreview(session_->preview());
 }
 

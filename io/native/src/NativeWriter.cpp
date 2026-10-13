@@ -2,199 +2,24 @@
 
 #include "archmage/document/Version.h"
 #include "archmage/native/Blob.h"
+#include "archmage/native/FaultPoints.h"
 #include "archmage/native/Format.h"
 #include "archmage/native/NativeFile.h"
 #include "Payloads.h"
+#include "Writer.h"
 #include "archmage/render/Graph.h"
 #include "archmage/render/ImageBuffer.h"
 #include "archmage/render/Kernels.h"
 
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <cstring>
-#include <ctime>
 #include <set>
-#include <unordered_set>
 
 namespace archmage::native {
-namespace {
 
+using detail::Writer;
 using nlohmann::json;
-
-std::string utcNow() {
-    const std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    std::tm tm{};
-    gmtime_r(&now, &tm);
-    char buffer[32];
-    std::strftime(buffer, sizeof buffer, "%Y-%m-%dT%H:%M:%SZ", &tm);
-    return buffer;
-}
-
-// Inserts rows through prepared statements; the first failure stops further work and is reported once.
-class Writer {
-public:
-    Writer(Database &db, WriteReport &report) : db_(db), report_(report) {}
-
-    base::Status prepare() {
-        object_ = statement("INSERT INTO objects (id, type, version, payload) VALUES (?, ?, ?, ?)");
-        relation_ = statement("INSERT INTO relations (parent, kind, ordinal, child) VALUES (?, ?, ?, ?)");
-        resource_ = statement("INSERT OR IGNORE INTO resources (hash, media_type, codec, codec_version, raw_length, "
-                              "data) VALUES (?, ?, ?, ?, ?, ?)");
-        tile_ = statement("INSERT INTO tile_maps (raster_id, version, tx, ty, plane, uniform, resource_hash) "
-                          "VALUES (?, ?, ?, ?, ?, ?, ?)");
-        manifest_ = statement("INSERT INTO manifest (key, value) VALUES (?, ?)");
-        asset_ = statement("INSERT INTO assets (id, kind, payload) VALUES (?, ?, ?)");
-        return status_;
-    }
-
-    [[nodiscard]] const base::Status &status() const { return status_; }
-
-    void object(const std::string &id, std::string_view type, int version, const json &payload) {
-        objectText(id, type, version, payload.dump());
-    }
-
-    void objectText(const std::string &id, std::string_view type, int version, std::string_view payload) {
-        if (!status_) {
-            return;
-        }
-        ++report_.objects;
-        object_->bind(1, id).bind(2, type).bind(3, std::int64_t{version}).bind(4, payload);
-        run(*object_);
-    }
-
-    void relation(const std::string &parent, std::string_view kind, std::int64_t ordinal, const std::string &child) {
-        if (!status_) {
-            return;
-        }
-        relation_->bind(1, parent).bind(2, kind).bind(3, ordinal).bind(4, child);
-        run(*relation_);
-    }
-
-    void resource(const Blob &blob) {
-        if (!status_ || !written_.insert(blob.hash).second) {
-            return; // content-addressed: one row per distinct content
-        }
-        ++report_.resources;
-        report_.rawBytes += blob.rawLength;
-        report_.encodedBytes += blob.data.size();
-        resource_->bind(1, blob.hash)
-            .bind(2, blob.mediaType)
-            .bind(3, blob.codec)
-            .bind(4, std::int64_t{blob.codecVersion})
-            .bind(5, static_cast<std::int64_t>(blob.rawLength))
-            .bind(6, blob.data);
-        run(*resource_);
-    }
-
-    void manifest(std::string_view key, std::string_view value) {
-        if (!status_) {
-            return;
-        }
-        manifest_->bind(1, key).bind(2, value);
-        run(*manifest_);
-    }
-
-    void asset(const document::PreservedContent::Asset &asset) {
-        if (!status_) {
-            return;
-        }
-        asset_->bind(1, asset.id).bind(2, asset.kind).bind(3, asset.payload);
-        run(*asset_);
-    }
-
-    void preservedPlane(const document::PreservedContent::TilePlane &plane) {
-        if (!status_) {
-            return;
-        }
-        ++report_.tilePlanes;
-        tile_->bind(1, plane.raster).bind(2, plane.version).bind(3, plane.tx).bind(4, plane.ty).bind(5, plane.plane);
-        if (plane.uniform) {
-            tile_->bind(6, *plane.uniform).bindNull(7);
-        } else {
-            tile_->bindNull(6).bind(7, plane.resourceHash);
-        }
-        run(*tile_);
-    }
-
-    /// The raster object and its tile planes; a raster shared by several layers is written once.
-    void raster(const document::RasterContent &content) {
-        const std::string id = content.id.toString();
-        if (!status_ || !rasters_.insert(id).second) {
-            return;
-        }
-        const tiles::TileMap &map = content.tiles;
-        object(id, kRasterType, kRasterVersion, rasterPayload(map));
-        map.forEach([&](tiles::TileCoord coord, const std::shared_ptr<const tiles::Tile> &tile) {
-            for (std::size_t p = 0; p < map.layout().planeCount() && status_; ++p) {
-                plane(id, coord, p, *tile, map.layout().sampleBytes());
-            }
-        });
-    }
-
-private:
-    std::optional<Statement> statement(std::string_view sql) {
-        auto prepared = db_.prepare(sql);
-        if (!prepared) {
-            if (status_) {
-                status_ = base::unexpected(prepared.error());
-            }
-            return std::nullopt;
-        }
-        return std::move(*prepared);
-    }
-
-    // A uniform plane, or a dense plane whose samples happen to be equal, stores its one sample inline.
-    void plane(const std::string &raster, tiles::TileCoord coord, std::size_t index, const tiles::Tile &tile,
-               std::size_t sampleBytes) {
-        ++report_.tilePlanes;
-        std::span<const std::byte> uniform;
-        std::optional<Blob> blob;
-        if (tile.isUniform()) {
-            uniform = tile.uniformSample(index);
-        } else {
-            const std::span<const std::byte> bytes = tile.plane(index);
-            bool same = true;
-            for (std::size_t i = sampleBytes; i < bytes.size() && same; i += sampleBytes) {
-                same = std::memcmp(bytes.data(), bytes.data() + i, sampleBytes) == 0;
-            }
-            if (same) {
-                uniform = bytes.first(sampleBytes);
-            } else {
-                blob = encodeBlob(bytes, std::string(kTilePlaneMedia));
-                resource(*blob);
-            }
-        }
-        if (!status_) {
-            return;
-        }
-        tile_->bind(1, raster).bind(2, std::int64_t{0}).bind(3, coord.tx).bind(4, coord.ty);
-        tile_->bind(5, static_cast<std::int64_t>(index));
-        if (blob) {
-            tile_->bindNull(6).bind(7, blob->hash);
-        } else {
-            tile_->bind(6, uniform).bindNull(7);
-        }
-        run(*tile_);
-    }
-
-    void run(Statement &statement) {
-        statement.step();
-        if (auto status = statement.status(); !status && status_) {
-            status_ = std::move(status);
-        }
-        statement.reset();
-    }
-
-    Database &db_;
-    WriteReport &report_;
-    base::Status status_;
-    std::optional<Statement> object_, relation_, resource_, tile_, manifest_, asset_;
-    std::unordered_set<std::string> written_;
-    std::unordered_set<std::string> rasters_;
-};
-
-} // namespace
 
 base::Result<Preview> renderPreview(const document::DocumentState &state, std::int64_t maxSize) {
     if (maxSize <= 0 || state.width <= 0 || state.height <= 0) {
@@ -373,7 +198,7 @@ base::Result<WriteReport> writeDocument(Database &db, const document::Revision &
     writer.manifest(manifest::kCurrentRevision, revision.id.toString());
     writer.manifest(manifest::kColorPolicy, colorPolicyPayload(state.colorPolicy, profile.hash).dump());
     writer.manifest(manifest::kWriter, document::versionBanner());
-    writer.manifest(manifest::kSavedAt, utcNow());
+    writer.manifest(manifest::kSavedAt, detail::utcNow());
     if (!options.derivedFrom.isNull()) {
         writer.manifest(manifest::kDerivedFrom, options.derivedFrom.toString());
     }
@@ -381,6 +206,10 @@ base::Result<WriteReport> writeDocument(Database &db, const document::Revision &
     if (!writer.status()) {
         (void)db.exec("ROLLBACK");
         return base::unexpected(writer.status().error());
+    }
+    if (auto fault = faultPoint(FaultPoint::TxCommit); !fault) {
+        (void)db.exec("ROLLBACK");
+        return base::unexpected(std::move(fault).error());
     }
     if (auto committed = db.exec("COMMIT"); !committed) {
         return base::unexpected(std::move(committed).error());
