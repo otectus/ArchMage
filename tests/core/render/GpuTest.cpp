@@ -121,9 +121,15 @@ TEST(GpuContext, ForcedCpuIsUnavailable) {
 #if defined(ARCHMAGE_UNDER_TSAN)
     GTEST_SKIP() << "the GPU driver cannot run under ThreadSanitizer";
 #endif
+    const char *previous = std::getenv("ARCHMAGE_FORCE_CPU");
+    const std::string saved = previous != nullptr ? previous : "";
     ::setenv("ARCHMAGE_FORCE_CPU", "1", 1);
     auto context = GpuContext::create(GpuContext::Options{});
-    ::unsetenv("ARCHMAGE_FORCE_CPU");
+    if (previous != nullptr) {
+        ::setenv("ARCHMAGE_FORCE_CPU", saved.c_str(), 1); // leave the environment as the run set it
+    } else {
+        ::unsetenv("ARCHMAGE_FORCE_CPU");
+    }
     ASSERT_FALSE(context);
     EXPECT_EQ(context.error().category, base::ErrorCategory::ProviderUnavailable);
     EXPECT_EQ(context.error().code, "gpu.unavailable");
