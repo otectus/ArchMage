@@ -23,6 +23,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <span>
 #include <stop_token>
 #include <thread>
 #include <unordered_map>
@@ -92,6 +93,11 @@ public:
     /// Premultiplied output of `root` for one document tile, from the cache when possible.
     base::Result<std::shared_ptr<const ImageBuffer>> renderTile(const GraphNode &root, tiles::TileCoord tile,
                                                                 const EvaluationContext &context);
+    /// Several tiles at once on the worker pool; results are in the order of `coords`. Must not be
+    /// called from a worker thread.
+    std::vector<base::Result<std::shared_ptr<const ImageBuffer>>>
+    renderTiles(const GraphNode &root, std::span<const tiles::TileCoord> coords,
+                const EvaluationContext &context);
 
     [[nodiscard]] CacheStats cacheStats() const;
     void clearCache();

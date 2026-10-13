@@ -81,6 +81,8 @@ private:
 
 /// Registers the Stage 1 layer commands (S1-2.6); builtIn() calls this.
 void registerLayerCommands(CommandRegistry &registry);
+/// Registers the raster commands (S1-3.3: archmage.raster.paintStroke); builtIn() calls this.
+void registerRasterCommands(CommandRegistry &registry);
 
 /// Helpers shared by command implementations.
 namespace detail {

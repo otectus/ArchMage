@@ -1,0 +1,69 @@
+{
+  "benchmark": "brush-latency",
+  "spec_budget": "simple brush preview p95 <= 25 ms CPU/event-to-submission (spec \u00a725.2, profile A)",
+  "profile": "A (measured on the reference development machine)",
+  "date": "2026-10-13T19:55:27+00:00",
+  "duration_s": 10.0,
+  "fixture": {
+    "commandId": "archmage.document.create",
+    "parameters": {
+      "width": 4096,
+      "height": 4096,
+      "background": "white"
+    },
+    "sha256": "4e93c25a07b4d061d320d290b456cc6321e140e7039fe79c596bb5e517907571"
+  },
+  "input": {
+    "kind": "synthetic QTabletEvent with a pressure ramp",
+    "nominal_rate_hz": 240,
+    "measured_rate_hz": 248.0
+  },
+  "result": {
+    "brush": "round, size 24, hardness 0.8, spacing 0.1, pressure to size",
+    "budget_p95_ms": 25,
+    "canvas": "4096x4096 RGBA8, white background",
+    "events": 2480,
+    "frames": 2480,
+    "history_entries": 12,
+    "input_rate_hz": 240,
+    "max_ms": 12.782713,
+    "p50_ms": 2.489212,
+    "p95_ms": 3.18964,
+    "platform": "offscreen",
+    "render_p50_ms": 2.375449,
+    "render_p95_ms": 2.953739,
+    "strokes": 11,
+    "surface": "raster",
+    "view": "actual pixels, 1280x800 device",
+    "within_budget": true
+  },
+  "pass": true,
+  "environment": {
+    "os": "CachyOS, kernel 7.2.9-2-cachyos",
+    "compositor": "none: Qt offscreen platform (no presentation); session compositor Hyprland 0.56.2 built from branch v0.56.2 at commit efb50993780079460b0cbed1363e2166a2de1d9f clean ([gha] Nix: update inputs).",
+    "driver": {
+      "nvidia": "615.78.08",
+      "mesa": "3:26.2.4-1"
+    },
+    "compiler": {
+      "path": "g++",
+      "version": "g++ (GCC) 16.2.1 20260810",
+      "build_type": "RelWithDebInfo"
+    },
+    "power_mode": "balanced-performance",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13700HX",
+    "logical_cpus": 24,
+    "memory_gib": 31.1,
+    "storage": {
+      "source": "/dev/nvme0n1p2[/@home]",
+      "model": "Predator SSD GM7000 1TB"
+    },
+    "monitor_scale": "1.0 (offscreen platform, no monitor)",
+    "git_revision": "963cc5e2b2dd",
+    "binary_sha256": "401e608fe4fc1e616d093c5bac131ef4c359483aaf2d7f9b78dafc742ae142d6",
+    "thermal": {
+      "cpu_package_c_before": 91.0,
+      "cpu_package_c_after": 92.0
+    }
+  }
+}

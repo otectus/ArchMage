@@ -102,6 +102,16 @@ archmage_add_test(ExecutorTest
     LABELS operation
     LINKS archmage_commands)
 
+archmage_add_test(BrushTest
+    SOURCES core/brush/BrushTest.cpp
+    LABELS math
+    LINKS archmage_brush)
+
+archmage_add_test(PaintStrokeTest
+    SOURCES core/brush/PaintStrokeTest.cpp
+    LABELS operation image
+    LINKS archmage_commands archmage_render)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math
@@ -121,6 +131,12 @@ archmage_add_test(InputMapperTest
 
 archmage_add_test(CanvasSurfaceTest
     SOURCES ui/CanvasSurfaceTest.cpp
+    LABELS ui
+    LINKS archmage_ui
+    QT)
+
+archmage_add_test(BrushSliceTest
+    SOURCES ui/BrushSliceTest.cpp
     LABELS ui
     LINKS archmage_ui
     QT)

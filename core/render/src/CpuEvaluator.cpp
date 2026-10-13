@@ -140,7 +140,7 @@ void CpuEvaluator::clearCache() {
 
 base::Result<std::shared_ptr<const ImageBuffer>>
 CpuEvaluator::renderTile(const GraphNode &root, tiles::TileCoord tile, const EvaluationContext &context) {
-    const CacheKey key{root.cacheKey(), tile, context.quality, context.time};
+    const CacheKey key{root.cacheKey(tiles::tilePixelRect(tile)), tile, context.quality, context.time};
     {
         const std::lock_guard lock(cacheMutex_);
         if (const auto it = cache_.find(key); it != cache_.end()) {
@@ -160,6 +160,26 @@ CpuEvaluator::renderTile(const GraphNode &root, tiles::TileCoord tile, const Eva
     std::shared_ptr<const ImageBuffer> result = std::move(buffer);
     insertCache(key, result);
     return result;
+}
+
+std::vector<base::Result<std::shared_ptr<const ImageBuffer>>>
+CpuEvaluator::renderTiles(const GraphNode &root, std::span<const tiles::TileCoord> coords,
+                          const EvaluationContext &context) {
+    std::vector<base::Result<std::shared_ptr<const ImageBuffer>>> results;
+    results.reserve(coords.size());
+    for (std::size_t i = 0; i < coords.size(); ++i) {
+        results.emplace_back(
+            base::fail(ErrorCategory::Internal, "render.not_run", "The tile was not rendered"));
+    }
+    std::latch done(static_cast<std::ptrdiff_t>(coords.size()));
+    for (std::size_t i = 0; i < coords.size(); ++i) {
+        post([&, i] {
+            results[i] = renderTile(root, coords[i], context);
+            done.count_down();
+        });
+    }
+    done.wait();
+    return results;
 }
 
 base::Result<RenderResult> CpuEvaluator::render(const document::DocumentState &document,
