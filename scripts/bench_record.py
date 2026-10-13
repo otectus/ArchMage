@@ -2,7 +2,8 @@
 """Records the spec §25.2 benchmarks for one reference profile (plan S1-6.8, spec §25.1).
 
 Usage:
-  python3 -I scripts/bench_record.py [--profile A|C] [--build build/dev-release] [--wayland] [--force]
+  python3 -I scripts/bench_record.py [--profile A|C] [--build build/dev-release] [--wayland]
+                                     [--wait-idle MINUTES | --force]
 
 Runs, against a release build:
   - bench_main (warm pan/zoom, pixel update after a stroke, small undo, CPU and GPU composites);
@@ -18,8 +19,9 @@ D need machines that do not exist here; `--profile B` and `--profile D` write an
 the commands that would be run.
 
 Measurements are only meaningful on an otherwise idle machine: the script refuses to run while the
-one-minute load average exceeds 2 or another process uses the GPU, unless --force is given, in which case
-the record says so.
+one-minute load average exceeds 2 or GPU utilization exceeds 10 %, unless --force is given, in which case
+the record says so. With --wait-idle N it instead polls once a minute and starts after N consecutive quiet
+minutes.
 """
 
 from __future__ import annotations
@@ -33,6 +35,7 @@ import os
 import statistics
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,12 +51,10 @@ def load_brush_module():
 def quiet_machine() -> tuple[bool, str]:
     load = float(Path("/proc/loadavg").read_text().split()[0])
     try:
-        apps = subprocess.run(["nvidia-smi", "--query-compute-apps=pid,process_name,used_memory", "--format=csv,noheader"],
-                              capture_output=True, text=True, timeout=20).stdout.strip().splitlines()
         utilization = subprocess.run(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
                                      capture_output=True, text=True, timeout=20).stdout.strip()
     except (OSError, subprocess.SubprocessError):
-        apps, utilization = [], "0"
+        utilization = "0"
     gpu = int(utilization.splitlines()[0]) if utilization and utilization.splitlines()[0].isdigit() else 0
     reasons = []
     if load > 2.0:
@@ -61,6 +62,17 @@ def quiet_machine() -> tuple[bool, str]:
     if gpu > 10:
         reasons.append(f"GPU utilization {gpu} % > 10 %")
     return (not reasons, "; ".join(reasons) if reasons else f"load average {load:.2f}, GPU utilization {gpu} %")
+
+
+def wait_until_quiet(minutes: int) -> str:
+    """Polls once a minute until the machine has been quiet for `minutes` consecutive checks."""
+    streak = 0
+    while True:
+        quiet, conditions = quiet_machine()
+        streak = streak + 1 if quiet else 0
+        if streak >= minutes:
+            return conditions
+        time.sleep(60)
 
 
 def evidence(output: str, tag: str) -> dict | None:
@@ -99,6 +111,8 @@ def main() -> int:
     parser.add_argument("--build", type=Path, default=ROOT / "build/dev-release")
     parser.add_argument("--wayland", action="store_true", help="launch on a temporary headless Hyprland output")
     parser.add_argument("--force", action="store_true", help="record even on a busy machine (marked in the record)")
+    parser.add_argument("--wait-idle", type=int, default=0, metavar="MINUTES",
+                        help="wait for this many consecutive quiet minutes instead of refusing")
     parser.add_argument("--launches", type=int, default=5)
     args = parser.parse_args()
 
@@ -114,6 +128,9 @@ def main() -> int:
         print(f"profile {args.profile} unavailable; wrote {out}")
         return 0
 
+    if args.wait_idle > 0:
+        print(f"waiting for {args.wait_idle} consecutive quiet minutes", flush=True)
+        wait_until_quiet(args.wait_idle)
     quiet, conditions = quiet_machine()
     if not quiet and not args.force:
         print(f"refusing to record on a busy machine ({conditions}); rerun when idle or pass --force", file=sys.stderr)
