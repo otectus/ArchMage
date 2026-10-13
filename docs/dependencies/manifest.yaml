@@ -320,7 +320,7 @@ dependencies:
   - id: harfbuzz
     name: "HarfBuzz"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [pkg_config:harfbuzz]
     source: {type: system_package, package: harfbuzz, repository: cachyos-extra-v3, upstream: "https://harfbuzz.github.io/"}
     version: "14.6.0-1.1"
@@ -334,7 +334,7 @@ dependencies:
   - id: freetype2
     name: "FreeType"
     category: library
-    usage: found_not_linked
+    usage: linked
     lookups: [pkg_config:freetype2]
     source: {type: system_package, package: freetype2, repository: cachyos-extra-v3, upstream: "https://www.freetype.org/"}
     version: "2.14.3-1.2"
@@ -456,6 +456,20 @@ dependencies:
     redistribution: "Build-time tool only; not distributed with ArchMage."
     maintenance: "maintained; distribution package built 2026-02-17"
     affects: ["build system (D-03)"]
+
+  - id: noto-fonts
+    name: "Noto fonts (Noto Sans Arabic, Noto Sans Devanagari)"
+    category: font
+    usage: test_time
+    lookups: []
+    source: {type: system_package, package: noto-fonts, repository: extra, upstream: "https://fonts.google.com/noto"}
+    version: "1:2026.10.01-1"
+    checksum: sha256:3cf6de13b1f3600ed782ff5e22eb6b3827fcc0ab5ee407bc0b121239fe19d949
+    build_options: "Distribution package; read from /usr/share/fonts/noto at run time, never bundled"
+    license: ["OFL-1.1-no-RFN"]
+    redistribution: "Not distributed with ArchMage. Bundling would need the OFL notice and the reserved-font-name rules."
+    maintenance: "maintained; distribution package built 2026-10-01"
+    affects: ["text shaping probe (S1-6.7, benchmarks/probes/text_probe.cpp)", "docs/decisions/evidence/S1-6/text/text-probe.png (rendered glyphs)"]
 
   - id: python
     name: "Python"

@@ -18,3 +18,9 @@ add_executable(raw_probe probes/raw_probe.cpp)
 target_link_libraries(raw_probe PRIVATE archmage_core archmage_probe_png PkgConfig::LibRaw)
 archmage_target_warnings(raw_probe)
 add_dependencies(benchmarks raw_probe)
+
+# M0-E5: HarfBuzz shapes Arabic and Devanagari with Noto Sans; FreeType rasterizes into tiles.
+add_executable(text_probe probes/text_probe.cpp)
+target_link_libraries(text_probe PRIVATE archmage_core archmage_probe_png PkgConfig::HarfBuzz PkgConfig::FreeType2)
+archmage_target_warnings(text_probe)
+add_dependencies(benchmarks text_probe)
