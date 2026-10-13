@@ -9,10 +9,10 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0 to S1-4 (see below). Next: S1-5, recovery, durability, fault injection and malformed
-  input (gate G5).
-- Before starting S1-5, re-run the G4 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
-  `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image and document tiers.
+- Completed: S1-0 to S1-5 (see below). Next: S1-6, GPU slice and M0 probes (gate G6).
+- Before starting S1-6, re-run the G5 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+  `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image, document and
+  resilience tiers.
 - Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
 ## Open questions (plan §6.3)
@@ -60,7 +60,7 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 | M0-D7 Test corpus plan | Done in S1-0 | `docs/testing/corpus-plan.md` |
 | M0-E1 Docking, GPU canvas, overlays, mixed DPI, tablet | Done in S1-1, tablet unavailable | ADR-0011 evidence matrix; `docs/decisions/evidence/S1-1/` |
 | M0-E2 Tile compositing, blur halo, profile conversion, brush latency | CPU tile compositing (S1-2) and brush latency (S1-3, synthetic input) done; blur halo and profile conversion experiment pending (S1-6) | `EvaluatorTest`, `KernelsTest`, `benchmarks/results/2026-10-13-brush.json` |
-| M0-E3 Native save, reopen, kill-during-save recovery | Save and reopen done in S1-4; failures injected before each save step leave the previous file intact; process termination and recovery pending (S1-5) | `At001Test`, `NativeSaveOnFilesystem.AFailedStepLeavesThePreviousFileIntact` |
+| M0-E3 Native save, reopen, kill-during-save recovery | Done: save and reopen in S1-4; kill during save and journal, and recovery, in S1-5 | `At001Test`, `KillDuringSaveTest` (AT-013), `RecoveryTest` |
 | M0-E4 Layered PSD decode probe | Not started (S1-6) | |
 | M0-E5 RAW file, shaped Arabic and Indic text, macOS GPU path | Not started (S1-6) | |
 | M0-E6 Resource estimates on profiles A to D | Not started (S1-6) | |
@@ -73,7 +73,8 @@ development machine); HDR; display color accuracy (sRGB display assumed, ADR-001
 than Hyprland; accessibility beyond keyboard reachability; mixed DPI across physical monitors and
 real-cursor alignment (S1-1 used headless outputs and synthetic events, ADR-0011); GPU device loss;
 saving on vfat, exfat and network filesystems (the backup fallback is tested by overriding the detected
-filesystem, not on such a mount).
+filesystem, not on such a mount); refusing a network filesystem for the recovery workspace (tested only
+through the filesystem type table); power loss (interruptions are simulated with `_exit` at fault points).
 
 ## S1-0 Bootstrap and scaffolding: complete, 2026-10-11
 
@@ -521,6 +522,97 @@ unknown-filesystem default and a cast in `NativeMigrationTest`; neither touches 
 - With nlohmann/json 3.12, `EXPECT_EQ(std::string, json)` does not compile; compare with `.get<T>()`.
 - Do not name an `INSTANTIATE_TEST_SUITE_P` name-generator parameter `info`: `-Wshadow` flags it.
 
-## S1-5 to S1-9
+## S1-5 Recovery, durability, fault injection, malformed input: complete, 2026-10-13
+
+Work on branch `s1-5-recovery` (`a7e5a52`, `9a50996`, `da49be0`, `5a173da`, `abd1c0c`), merged to `main`
+in `579f04e`. The G4 checks were not re-run on `08ff479` before work began: that commit changed only this
+document after the same session's G4 run, so the run would have repeated an unchanged check. The full G4 set
+passes again on the S1-5 tree below.
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-5.1 Fault injection | Automatically tested | `io/native/include/archmage/native/FaultPoints.h` (eight points, `ARCHMAGE_FAULT` grammar, hit counts), option `ARCHMAGE_FAULT_INJECTION` (off in `dev-release`); `FaultPointsTest`: grammar, one scenario reaches all eight points, an armed fault fires at each, `enospc@` gives `resource_exhausted` |
+| S1-5.2 Recovery workspace | Automatically tested | `Recovery.h` (`RecoverySession`, `DocumentJournal`); `RecoveryJournal.ACommitIsJournaledWithinTwoAndAHalfSeconds` (in_memory to journaled after 1,929 ms on btrfs), `SavedRevisionsReportSavedAndLaterEditsDoNot`, `WritesOnlyTheTilesAnEditChanged`; `RecoveryRoot` and `RecoverySession` tests |
+| S1-5.3 Discovery and load | Automatically tested | `listRecoveryCandidates`, `recoverDocument`, `discardRecovery`; `RecoveryDiscovery.FindsAnAbandonedJournalByIdentityAfterRenames` (document and journal both renamed; identity matched; recovered state equals the edited one; the original byte-identical; discard removes the session), `RunningSessionsAreNotOffered`, `ASavedDocumentIsFlaggedUpToDate` |
+| S1-5.4 Spool-to-journal eviction | Automatically tested | `TileSpool`, `Tile::pin`; `RecoverySpool.A20000PixelDocumentStaysWithinA512MiBBudget`: 12,246 dense tiles (765 MiB) in a 20,000² document under a 512 MiB budget; accounted RAM peaked at 512 MiB (limit 512 + 64 MiB reserve), 16,384 evictions, every tile read back intact (12,246 reloads) |
+| S1-5.5 AT-013 | Automatically tested (dev-debug, asan-ubsan, tsan) | `KillDuringSaveTest`: `archmage-cli selftest-save` killed with `_exit(137)` at each of the eight points in ten cases (journal and save phases), three repetitions each; the last completed save opens and validates (the new file only after `dir_sync`), and recovery yields the last acknowledged journaled revision or a later commit |
+| S1-5.6 AT-014 | Automatically tested (dev-debug, asan-ubsan, tsan) | `DiskFullTest`, modes `rlimit` (`RLIMIT_FSIZE` = the original's size) and `enospc` (`enospc@tile_write`): `resource_exhausted` naming the file, original byte-identical, `modified true`, a journal write after the failure, Save As elsewhere succeeds with `derived_from`, no stray temporary file |
+| S1-5.7 Malformed corpus | Automatically tested | `tests/resilience/corpus/make_native_corpus.py` (ten files from the v0.1 fixture); `NativeCorpusTest`: each fails within 2 s with the expected category and code (the newer major opens as a read-only preview), with less than 64 MiB of extra resident memory; the reader and validator now reject containment cycles |
+| S1-5.8 Fuzzing | Recorded | `fuzz/native_reader_fuzz.cpp`, `fuzz/seed_native_reader.sh`; `docs/testing/fuzz.md`: 600 s, 78,079 executions, coverage 10,377 to 11,553 edges, no crash, leak or sanitizer report. The PNG harness comes with the PNG codec (S1-8) |
+| S1-5.9 CLI recover | Automatically tested | `apps/archmage-cli/Recover.cpp`; `cli.recover` (interchange): empty list, a session killed while journaling is listed with its source path, recovery writes a valid file at the journaled revision, the original unchanged, an existing output refused (`recover.output_exists`, exit 2) and left as it was |
+
+### Exit gate G5
+
+Met: AT-013 and AT-014 pass headless under `dev-debug` and `asan-ubsan` (and under `tsan`); the fuzz run is
+recorded in `docs/testing/fuzz.md`; `docs/architecture/recovery.md` documents the durability states and the
+"last acknowledged durable revision" guarantee (spec §10.4).
+
+### Commands and results (2026-10-13)
+
+The gate scripts ran on the working tree committed as `da49be0` to `abd1c0c` (the later commits added the
+fuzz harness, which the gates do not build, and documentation).
+
+| Command | Result |
+| --- | --- |
+| `scripts/check.sh` | exit 0; 165/165 non-UI tests (140 before S1-5); manifest test: 38 entries cover 22 lookups; ledger valid, report current |
+| `scripts/check-ui.sh` | exit 0; 4/4 |
+| `scripts/check-sanitizers.sh` | exit 0; 169/169 including AT-013, AT-014 and the spool test; 0 compiler warnings |
+| `cmake --preset tsan && cmake --build --preset tsan && ctest --preset tsan -L "operation\|image\|document\|resilience"` | 101/101, no ThreadSanitizer reports |
+| `cmake --preset ci && cmake --build --preset ci && ctest --preset ci --label-exclude '^(perf)$'` | 169/169; 0 warnings under `-Werror` |
+| `cmake --preset dev-release && cmake --build --preset dev-release && ctest --test-dir build/dev-release -L "resilience\|interchange"` | builds with fault injection off; 17/17: 12 fault-dependent tests skip, the rest pass (AT-014's `rlimit` mode included) |
+| `build/fuzz/fuzz/native_reader_fuzz -max_total_time=600 ...` (full command in `docs/testing/fuzz.md`) | 78,079 executions, no findings |
+
+### Deviations from the plan
+
+1. ADR-0104 amends D-14 and settles details of D-26 and D-27: liveness by `flock` on `session.lock`,
+   `/var/tmp/archmage-<uid>` as the last local fallback, incremental journal writes, tiles spoolable once
+   their journal transaction commits, the `error@`/`enospc@` grammar, and `selftest-save` /
+   `selftest-disk-full` subcommands instead of a `--selftest-save` option.
+2. Spooling made tile residency explicit: reading a dense tile requires `Tile::pin()`, copies go through the
+   fallible `TileBuffer::copyOf`, and `applyStrokeToTile` and `paintLayer` return errors; `StrokeSession`
+   keeps the first failure. Dense tiles now ask the coordinator for room before charging it.
+3. Fuzz seeds are generated by `fuzz/seed_native_reader.sh` rather than committed as copies; the corpus plan
+   rows say so.
+4. The ThreadSanitizer run also covers the resilience tier.
+5. The G4 checks were not re-run separately before work began (see above).
+6. The interim window does not use the recovery session yet; the status-bar durability indicator is S1-7
+   and the recovery dialog S1-8.
+
+### Progress report (plan §8.2)
+
+#### S1-5 Recovery, durability, fault injection, malformed input, 2026-10-13
+
+- **Implemented outcomes:** documents are journaled every two seconds to a crash-safe recovery database;
+  after a crash, `archmage-cli recover` finds them by identity and writes them to a new file without
+  touching the original; documents larger than the RAM budget stay within it by spooling journaled tiles;
+  saves survive kills at every durability step and report disk exhaustion without damage; malformed files
+  fail fast with the right error.
+- **Changed modules:** `io/native` (recovery, fault points, writer and reader internals), `core/tiles`
+  (pins, `TileSpool`), `core/brush`, `core/commands`, `core/render` (pinned reads), `ui/tools` (stroke
+  failures), `apps/archmage-cli` (`recover`, self-tests), `tests/resilience`, `fuzz`.
+- **Passing evidence (commands and result paths):** the table above; `docs/testing/fuzz.md`.
+- **Manual validation (what, how, platform):** none by a person; `archmage-cli recover` and the self-test
+  children were also run by hand on tmpfs (outputs consistent with the tests).
+- **Performance changes (benchmark result file):** none recorded; the spool test's figures are in the
+  table above. Journaling cost during painting is measured in S1-6.8.
+- **Migrations:** none; journals use schema 0.1.
+- **Dependency changes (manifest diff):** Python 3 is now a CMake lookup (`find_package:Python3`, for the
+  corpus generator); no new dependencies.
+- **Open risks:** power loss and real network mounts are untested; opening a document still loads every
+  tile; the UI does not show durability yet.
+- **State by behavior:** journaling, recovery, spooling, kill-during-save and disk exhaustion automatically
+  tested; nothing manually tested by a person or verified against a benchmark product.
+- **Sample document:** `docs/samples/s1-4-layered.archmage` (unchanged).
+
+### Notes for the next session
+
+- Reading a dense tile's planes requires a `Tile::Pin`; take one before `plane()` in any new reader.
+- Fault-dependent tests skip in `dev-release` (`ARCHMAGE_FAULT_INJECTION` is off there).
+- Each discovered GoogleTest case runs in its own process, so a test may change
+  `ResourceCoordinator::global()` limits without affecting others.
+
+## S1-6 to S1-9
 
 Not started.
