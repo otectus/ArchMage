@@ -92,6 +92,16 @@ archmage_add_test(EvaluatorTest
     LABELS image
     LINKS archmage_render)
 
+archmage_add_test(CommandsTest
+    SOURCES core/commands/CommandsTest.cpp
+    LABELS operation
+    LINKS archmage_commands)
+
+archmage_add_test(ExecutorTest
+    SOURCES core/commands/ExecutorTest.cpp
+    LABELS operation
+    LINKS archmage_commands)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math
