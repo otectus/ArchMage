@@ -37,4 +37,8 @@ policy. Spec §7.5 makes CPU reference implementations the definition of correct
 
 ## Evidence
 
-None yet. Fixtures and tests in S1-2.8; GPU comparison in S1-6.2.
+- S1-2: `KernelsTest` and `EvaluatorTest` (a 3-layer document equals a hand-computed reference; NaN and
+  infinity sanitized and counted; color under zero alpha preserved; negative and above-one float samples kept).
+- S1-6.2: an independent implementation (the Vulkan compute shader, `core/render/gpu/shaders/source_over.comp`)
+  written to the same equations reproduces the CPU reference bit for bit on uint8 and float32 stacks
+  (`GpuTest`).

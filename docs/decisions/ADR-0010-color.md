@@ -36,4 +36,11 @@ OpenColorIO for scene and view transforms. Full color work is milestone M4.
 
 ## Evidence
 
-None yet. Skeleton and pinned sRGB hash in S1-2.9; conversion experiment in S1-6.4.
+- S1-2.9: `ColorTest` pins the generated sRGB profile's hash.
+- S1-6.4: `ColorExperimentTest` and `docs/decisions/evidence/S1-6/color.md`:
+  - Little CMS matches an independent computation to 2e-5 in linear light, converting sRGB to a
+    1998-wide-gamut profile built from primaries.
+  - Perceptual and relative colorimetric agree for matrix/TRC profiles, and so do runs with and without
+    black point compensation.
+  - Assign keeps samples and changes appearance; convert keeps appearance within 2e-4.
+  - Float transforms leave out-of-gamut values unbounded.

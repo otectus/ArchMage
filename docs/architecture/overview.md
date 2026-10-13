@@ -1,10 +1,11 @@
 # ArchMage architecture overview
 
-Status: S1-5. The headless core exists: vocabulary types, tiles, the document model, commands with an
+Status: S1-6. The headless core exists: vocabulary types, tiles, the document model, commands with an
 executor and jobs, color profiles, the CPU evaluator and the brush; the interim window paints on a
 document canvas (S1-3); documents save to and open from `.archmage` files (S1-4,
 `docs/architecture/native-format.md`); a recovery journal, tile spooling and fault injection exist
-headlessly (S1-5, `docs/architecture/recovery.md`). The shell is planned design from
+headlessly (S1-5, `docs/architecture/recovery.md`); an opt-in Vulkan compute slice matches the CPU compositor
+and the M0 probes have run (S1-6). The shell is planned design from
 `docs/plans/Stage1_Development_Plan.md` and its ADRs in `docs/decisions/`. The "Contents" column lists
 what exists today.
 
@@ -37,8 +38,9 @@ the job model (S1-2.10) is the seam they will use (plan A-15).
 | `core/document/` | `archmage_document` | `archmage::document` | Document graph, revisions, resource references, invariants | no | `Version.h`; `Document.h`: `DocumentState`, `Layer`, `RasterContent`, `Revision`, `validate()` | S1-2 |
 | `core/commands/` | `archmage_commands` | `archmage::commands` | Operations, validation, transactions, undo descriptions | no | `CommandEnvelope`, `CommandDefinition`, `CommandRegistry`, `createDocument`, Stage 1 layer commands, `MutationExecutor`, `JobScheduler` | S1-2 |
 | `core/tiles/` | `archmage_tiles` | `archmage::tiles` | Sparse tile storage, sharing, cache, storage-backed eviction | no | `SampleType`, `ChannelLayout`, `Tile` (pins, spooling), `TileBuffer`, `TileMap` (chunked copy-on-write), `DirtyRegion`, `ResourceCoordinator`, `TileSpool` | S1-2, S1-5 |
-| `core/render/` | `archmage_render` | `archmage::render` | Evaluation graph, scheduler, CPU kernels, GPU backend contracts | no | `ViewTransform`; `GraphNode`, `LayerSourceNode`, `CompositeNode`, `compileGraph`; source-over kernels; `CpuEvaluator` with `RenderRequest` | S1-1, S1-2, S1-6 |
-| `core/color/` | `archmage_color` | `archmage::color` | Profiles, conversions, view transforms, proofing | no | `ColorProfile` (Little CMS, pinned sRGB), `ColorPolicy`, `ColorPipeline`, `iccTransform` | S1-2, S1-6 |
+| `core/render/` | `archmage_render` | `archmage::render` | Evaluation graph, scheduler, CPU kernels, GPU backend contracts | no | `ViewTransform`; `GraphNode`, `LayerSourceNode`, `CompositeNode`, `GaussianBlurNode` (halo), `compileGraph`; source-over kernels; `CpuEvaluator` with `RenderRequest` | S1-1, S1-2, S1-6 |
+| `core/render/gpu/` | `archmage_gpu` | `archmage::gpu` | Vulkan compute slice, opt-in comparison (ADR-0012); not in `archmage_core` | no | `GpuContext` (headless device, validation counting, VRAM budget, device loss), `GpuEvaluator` (source-over compute shader, CPU fallback) | S1-6 |
+| `core/color/` | `archmage_color` | `archmage::color` | Profiles, conversions, view transforms, proofing | no | `ColorProfile` (Little CMS, pinned sRGB, `fromPrimaries`), `ColorPolicy`, `ColorPipeline`, `iccTransform` | S1-2, S1-6 |
 | `core/brush/` | `archmage_brush` | `archmage::brush` | Input processing, brush engines, stroke replay and deltas | no | `Stroke.h`: `BrushSettings`, `StrokeResampler`, round dabs, `StrokeMask`, `paintLayer`, `StrokeSession` | S1-3 |
 | `io/native/` | `archmage_native` | `archmage::native` | `.archmage` container, save transaction, recovery workspace | no | schema 0.1 (`schema/0001.sql`), `Database`/`Statement` (SQLite), `Blob` codec, `writeDocument`, `readDocument`, `validateFile`, `inspectFile`, `saveDocument`, migrations, `Platform` (statfs, fsync, rename); `Recovery.h` (`RecoverySession`, `DocumentJournal`, discovery), `FaultPoints.h` | S1-4, S1-5 |
 | `io/formats/` | `archmage_formats` | `archmage::formats` | PNG and JPEG codecs behind adapters | no | none (INTERFACE) | S1-8 |
@@ -55,8 +57,9 @@ Aggregates: `archmage_core` links the seven core modules and `archmage_io` links
 (ADR-0006). A module without sources is an INTERFACE target; `archmage_add_module()` makes it a
 static library once it lists sources. Only `ui/` and `apps/archmage/` may link Qt (ADR-0007).
 
-Other directories: `tests/` (CTest tiers, ADR-0005), `benchmarks/` (empty `benchmarks` target until
-S1-3.7 and S1-6.8), `fuzz/` (built only by the `fuzz` preset; harnesses in S1-5.8), `resources/`
+Other directories: `tests/` (CTest tiers, ADR-0005), `benchmarks/` (`bench_main` and the M0 probes
+`psd_probe`, `raw_probe`, `text_probe`, S1-6; results in `benchmarks/results/`), `fuzz/` (built only by the
+`fuzz` preset; `native_reader_fuzz`, S1-5.8), `resources/`
 (original assets only), `packaging/` (stub until M9), `cmake/` (build modules), `scripts/` (gates and
 generators), `docs/` (plans, decisions, ledger, status).
 
