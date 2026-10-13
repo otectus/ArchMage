@@ -8,6 +8,11 @@
 
 # Desktop shell and UI tests (D-05, D-11). Qt 6.7 is the floor for the QRhiWidget canvas candidate.
 find_package(Qt6 6.7 REQUIRED COMPONENTS Core Gui Widgets Test Svg)
+# Canvas adapter experiment (S1-1, D-11): QRhiWidget needs the QRhi headers, which Qt ships only with
+# its private Gui module, and qsb (ShaderTools) to package its shaders. The private-module use is
+# deliberate and recorded in ADR-0011, so Qt's configure-time reminder about it is silenced.
+set(QT_NO_PRIVATE_MODULE_WARNING ON)
+find_package(Qt6 6.7 REQUIRED COMPONENTS GuiPrivate ShaderTools)
 
 # Native container, content hashing and blob compression (D-13, D-19).
 find_package(SQLite3 3.40 REQUIRED)

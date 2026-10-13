@@ -70,6 +70,18 @@ archmage_add_test(SmokeTest
     LINKS archmage_ui
     QT)
 
+archmage_add_test(InputMapperTest
+    SOURCES ui/InputMapperTest.cpp
+    LABELS ui
+    LINKS archmage_ui
+    QT)
+
+archmage_add_test(CanvasSurfaceTest
+    SOURCES ui/CanvasSurfaceTest.cpp
+    LABELS ui
+    LINKS archmage_ui
+    QT)
+
 # CLI subprocess check: archmage-cli --version exits 0 and prints the version banner.
 add_test(NAME cli.version
     COMMAND "${CMAKE_COMMAND}"
