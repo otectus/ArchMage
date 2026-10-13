@@ -9,10 +9,14 @@ State vocabulary (spec §29.3), strongest first: **verified against benchmark**,
 ## Current position
 
 - Stage 1 = M0 + M1 (ADR-0001), split into sub-milestones S1-0 to S1-9 (plan §3.2).
-- Completed: S1-0 to S1-5 (see below). Next: S1-6, GPU slice and M0 probes (gate G6).
-- Before starting S1-6, re-run the G5 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
+- Completed: S1-0 to S1-6 (see below); S1-6 still owes the profile A and C benchmark records (S1-6.8), which
+  wait for an idle machine. Next: S1-7, shell: documents, layers, navigation (gate G7).
+- Before starting S1-7, re-run the G6 checks: `scripts/check.sh`, `scripts/check-ui.sh`,
   `scripts/check-sanitizers.sh`, and the ThreadSanitizer run of the operation, image, document and
   resilience tiers.
+- Pending record: `python3 -I scripts/bench_record.py --profile A --wait-idle 5`, then the same with
+  `--profile C`, from a `dev-release` build of a clean tree; commit the results and fill in M0-E6 and the
+  S1-6.8 row below.
 - Stage 2 (M2) is planned in `docs/plans/Stage2_Development_Plan.md`; it starts only after the M1 gate.
 
 ## Open questions (plan §6.3)
@@ -659,6 +663,115 @@ fuzz harness, which the gates do not build, and documentation).
 - Each discovered GoogleTest case runs in its own process, so a test may change
   `ResourceCoordinator::global()` limits without affecting others.
 
-## S1-6 to S1-9
+## S1-6 GPU slice and M0 probes: complete except two benchmark records, 2026-10-13
+
+Work on branch `s1-6-gpu-probes` (`4bab441`, `5d59852`, `134003a`, `3bac24b`, `6f6572c`, `11d6c6a`, `127fcaa`,
+`b622ef9`, `d2c9812`, `10ebad3`, `5ef3cf3`, `10a89c5`, `a852462`), merged to `main` in `e644dc3`. The G5 checks
+were not re-run on `9a9fdee` before work began: that commit changed only this document after the G5 run on
+the S1-5 tree. The full set passes again on the S1-6 tree below.
+
+### Tasks and definitions of done
+
+| Task | State | Evidence |
+| --- | --- | --- |
+| S1-6.1 Vulkan bootstrap | Automatically tested | `core/render/gpu/` (`archmage_gpu`, outside `archmage_core`): `GpuContext` picks a Vulkan 1.1 device with a compute queue (discrete first), runs the Khronos validation layer in Debug and counts its messages, registers half of the largest device-local heap as the VRAM budget, remembers a lost device; `ARCHMAGE_FORCE_CPU=1` reports no device. `GpuTest`: a device is created and destroyed with validation on and no errors (NVIDIA GeForce RTX 4050 Laptop GPU, driver 615.78.08); with `ARCHMAGE_FORCE_CPU=1` the six device tests skip with the reason and the forced-CPU test passes |
+| S1-6.2 GPU source-over | Automatically tested | `shaders/source_over.comp` (SPIR-V at build time), `GpuEvaluator`; `GpuTest`: equal to the CPU bit for bit (maximum difference 0; plan bound: uint8 exact, float32 1e-6) on the AT-002 fixture and on random 20-layer uint8 and float32 stacks; after device loss, and for graphs outside the slice, the CPU's results |
+| S1-6.3 Blur with halo | Automatically tested | `GaussianBlurNode`; `BlurTest`: required region is the output grown by the radius; tiled evaluation equals the whole image exactly (0 LSB, float difference 0; plan bound 1 LSB) at sigma 0.6, 2 and 7.5 on features across tile borders |
+| S1-6.4 Profile conversion | Automatically tested | `ColorProfile::fromPrimaries`; `ColorExperimentTest`; numbers in `docs/decisions/evidence/S1-6/color.md` (Little CMS within 2e-5 of an independent computation in linear light; assign versus convert) |
+| S1-6.5 PSD probe | Recorded | `benchmarks/probes/psd_probe.cpp`; `docs/decisions/evidence/S1-6/psd.md` (GIMP 3.2.6 fixture; 2 of 7 records rendered; 13 unsupported records; outside the unsupported shapes all 116,718 pixels equal GIMP's composite) |
+| S1-6.6 RAW probe | Recorded | `benchmarks/probes/raw_probe.cpp`; `docs/decisions/evidence/S1-6/raw.md` (CC0 Canon PowerShot A410 DNG; unsupported diagnostic for a non-RAW file) |
+| S1-6.7 Text probe | Recorded | `benchmarks/probes/text_probe.cpp`; `docs/decisions/evidence/S1-6/text.md` (Arabic and Devanagari shaped with HarfBuzz and Noto Sans) |
+| S1-6.8 Benchmark harness | Partly recorded | `benchmarks/bench_main.cpp`, `archmage --benchmark=launch`, `scripts/benchmarks/launch_timer.py`, `scripts/bench_record.py`. Profiles B and D recorded unavailable (`benchmarks/results/2026-10-13-bench-B.json`, `-D.json`). Profiles A and C **pending**: the record script refused to measure while a game was running (load average 10 to 12, GPU utilization 50 to 63 %) |
+| S1-6.9 macOS GPU path | Recorded unavailable | "Unavailable platforms and devices" above: four code gaps and the untested commands that would be run |
+| S1-6.10 ADR evidence | Done | ADR-0009, ADR-0010 and ADR-0012 cite the S1-6 evidence; the M0 table above is updated (M0-E6 waits for the A and C records) |
+
+### Exit gate G6
+
+Met except for S1-6.8's profile A and C records:
+- every M0 experiment has evidence or an explicit unavailable record, except M0-E6 profiles A and C;
+- the CPU/GPU comparison test exists, passes on the RTX 4050 and skips with a reason elsewhere;
+- benchmark results: B and D are committed; A and C are not yet.
+
+S1-6 was merged with the two records outstanding. They depend only on the machine being idle, not on code, and
+they will be committed to `main` as a follow-up.
+
+### Commands and results (2026-10-13)
+
+| Command | Result |
+| --- | --- |
+| `scripts/check.sh` on the merge `e644dc3` | exit 0; 180/180 non-UI tests; manifest: 39 entries cover 22 lookups; ledger valid, report current |
+| `scripts/check-ui.sh` (tree of `10a89c5`) | exit 0; 4/4 |
+| `cmake --preset asan-ubsan && cmake --build --preset asan-ubsan && ctest --preset asan-ubsan` (the steps of `scripts/check-sanitizers.sh`, at low priority; tree of `10a89c5`) | 184/184; 0 compiler warnings |
+| `cmake --build --preset tsan && ctest --preset tsan -L "operation\|image\|document\|resilience"` (tree of `d2c9812`) | 113/113, no ThreadSanitizer reports; the 7 GPU tests skip (the TSan runtime crashes on a driver thread) |
+| `cmake --preset ci && cmake --build --preset ci && ctest --preset ci --label-exclude '^(perf)$'` (tree of `5ef3cf3`), then `GpuTest` rebuilt from `10a89c5` | 184/184 and 7/7; 0 warnings under `-Werror` |
+| `build/dev-debug/tests/GpuTest`; `ARCHMAGE_FORCE_CPU=1 build/dev-debug/tests/GpuTest` | 7 passed; 1 passed and 6 skipped with the reason |
+| `psd_probe`, `raw_probe`, `text_probe` rerun after the Clang fixes | outputs identical to the committed evidence |
+| `python3 -I scripts/bench_record.py --profile A` | exit 3, refused: "load average 10.86 > 2; GPU utilization 63 % > 10 %" |
+
+### Deviations from the plan
+
+1. The GPU code is its own target, `archmage_gpu` in `core/render/gpu/`, outside `archmage_core`, so only code
+   that opts into GPU evaluation links Vulkan.
+2. The GPU slice gathers straight samples on the CPU into host-visible buffers and reads results back: it is a
+   correctness slice. ADR-0012 records the cost: data movement, not arithmetic, dominates.
+3. `GpuTest` runs without LeakSanitizer (the driver's unfreed pipeline allocations are unsymbolizable) and
+   skips under ThreadSanitizer.
+4. LibRaw's pkg-config link flag `-fopenmp` is dropped so that Clang presets link (`cmake/Dependencies.cmake`).
+5. The PSD fixture comes from GIMP only (Krita was not used) and lives in the corpus directory, as the corpus
+   plan says. The RAW fixture is a CC0 DNG; vendor RAW formats are untested.
+6. `bench_main` measures the frame source's CPU time offscreen, without presentation. Launch is measured warm;
+   a cold launch needs root to drop the page cache.
+7. The G5 checks were not re-run separately before work began (see above).
+8. S1-6 was merged before the profile A and C records exist (see G6).
+
+### Progress report (plan §8.2)
+
+#### S1-6 GPU slice and M0 probes, 2026-10-13
+
+- **Implemented outcomes:**
+  - an opt-in Vulkan compute compositor whose results equal the CPU reference bit for bit;
+  - a blur node whose tiled output has no seams;
+  - a validated profile conversion with assign and convert distinguished;
+  - PSD, RAW and text-shaping probes with committed evidence;
+  - a benchmark harness and a record script that measures only an idle machine.
+- **Changed modules:**
+  - `core/render`: the blur node and the new `gpu` module;
+  - `core/color`: `fromPrimaries`;
+  - `apps/archmage`: the launch benchmark;
+  - `benchmarks`: `bench_main` and the probes;
+  - `scripts`: `bench_record.py` and `launch_timer.py`;
+  - `tests`: `GpuTest`, `BlurTest`, `ColorExperimentTest`;
+  - `cmake`: the LibRaw link flags.
+- **Passing evidence (commands and result paths):** the table above; `docs/decisions/evidence/S1-6/`.
+- **Manual validation (what, how, platform):** none by a person. The probe images (`merged.png`,
+  `archmage-flat.png`, `raw-probe-preview.png`, `text-probe.png`) were inspected on the development machine.
+- **Performance changes (benchmark result file):** none committed yet for profiles A and C. Indicative GPU-slice
+  timings, taken on a busy machine, are in ADR-0012.
+- **Migrations:** none.
+- **Dependency changes (manifest diff):**
+  - now linked: the Vulkan loader and headers, nlohmann/json, libpng, LibRaw, HarfBuzz and FreeType;
+  - new entry: `noto-fonts`, a test-time font;
+  - new third-party fixture: the CC0 DNG in `fixtures`.
+- **Open risks:**
+  - the GPU slice's data movement;
+  - the macOS GPU path needs Vulkan portability enumeration before it can work;
+  - PSD coverage rests on one writer;
+  - no idle-machine performance record yet.
+- **State by behavior:**
+  - GPU compositing, the blur and the color conversion are automatically tested;
+  - the probes are recorded;
+  - nothing is manually tested by a person or verified against a benchmark product.
+- **Sample document:** `docs/samples/s1-4-layered.archmage` (unchanged).
+
+### Notes for the next session
+
+- Benchmarks need an idle machine. Run `scripts/bench_record.py --wait-idle 5` and never pass `--force` for a
+  record that is meant to count. `bench_main` exits on unknown arguments: it once ran by accident during a game.
+- Each commit changes the revision stamped into `Version.h`, so every build relinks. Before using build
+  results as evidence for a commit, compare object timestamps with the sources.
+- Third-party fixtures go in `docs/dependencies/manifest.yaml` (`fixtures`) and in the corpus register,
+  together with their license evidence.
+
+## S1-7 to S1-9
 
 Not started.
