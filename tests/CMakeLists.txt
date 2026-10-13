@@ -67,6 +67,11 @@ archmage_add_test(BaseTest
     LABELS math
     LINKS archmage_base)
 
+archmage_add_test(TilesTest
+    SOURCES core/tiles/TilesTest.cpp
+    LABELS math
+    LINKS archmage_tiles)
+
 archmage_add_test(ViewTransformTest
     SOURCES core/ViewTransformTest.cpp
     LABELS math
